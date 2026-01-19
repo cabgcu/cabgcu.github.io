@@ -1,0 +1,46 @@
+name: Deploy Survey
+
+on:
+  workflow_dispatch:  # allows manual trigger
+  push:
+    branches:
+      - main  # triggers on pushes to main branch
+
+jobs:
+  build-and-deploy-survey:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout portal repo
+      - name: Checkout Portal Repo
+        uses: actions/checkout@v3
+
+      # Step 2: Checkout survey repo
+      - name: Checkout Survey Repo
+        uses: actions/checkout@v3
+        with:
+          repository: cabgcu/survey   # <-- replaced username
+          path: survey
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Build survey app
+      - name: Build Survey
+        run: |
+          cd survey
+          npm install
+          npm run build
+
+      # Step 4: Copy survey build to portal repo
+      - name: Copy Build
+        run: |
+          rm -rf survey                   # remove old folder in portal repo
+          mv survey/dist ../survey || mv survey/build ../survey
+
+      # Step 5: Commit and push changes
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add survey
+          git commit -m "Update survey build" || echo "No changes to commit"
+          git push
