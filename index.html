@@ -4,8 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>CAB Portal</title>
-    <link rel="preconnect" href="https://script.google.com">
-    <link rel="preconnect" href="https://script.googleusercontent.com">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
@@ -29,12 +28,12 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
             color: var(--text-main); 
             background-color: var(--bg-dark); 
-            height: 100vh; /* Fixed height for centering */
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Vertically Centers Portal */
-            overflow: hidden; /* Prevents body scroll */
+            justify-content: center;
+            overflow: hidden;
         }
 
         #loading-overlay {
@@ -45,7 +44,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: none; 
             pointer-events: none;
         }
 
@@ -67,10 +65,9 @@
             justify-content: center;
             height: auto;
             max-height: 100vh;
-            overflow-y: auto; /* Internal scroll only if content overflows */
+            overflow-y: auto;
         }
         
-        /* Hide scrollbar for clean look */
         .app-container::-webkit-scrollbar { display: none; }
 
         .view { display: none; width: 100%; opacity: 0; transform: translateY(15px); transition: 0.4s ease; }
@@ -101,7 +98,7 @@
 
         .modal-content { 
             position: relative; width: 95%; max-width: 380px; background: #000; border-radius: 28px; padding: 28px; border: 1px solid var(--glass-border); 
-            display: flex; flex-direction: column; gap: 20px; /* SPACE BETWEEN PASS AND BUTTON */
+            display: flex; flex-direction: column; gap: 20px;
         }
         .no-save-pass { -webkit-text-security: disc !important; }
         
@@ -174,8 +171,10 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydG10e4oM8g0A8ZFgCeky-3r0pu9Cu0IGKA4b93zl6-ds4_VYiidbq13UPqQ2LgEQVWA/exec";
-    
+    const SUPABASE_URL = "https://nmmshjdknmuzpgpquwec.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_PCxlxywY7W6K3TmMrSnSsw_NPXKugoZ";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     let state = {
         config: { portalName: "CAB GCU", portalBio: "", socialHandle: "@cabgcu", avatarUrl: "", links: [], bgImages: [] },
         bgIndex: 0
@@ -186,19 +185,32 @@
 
     async function syncData() {
         try {
-            const res = await fetch(SCRIPT_URL);
-            const data = await res.json();
-            if (data.config) {
-                state.config.portalName = data.config.PortalName || "CAB GCU";
-                state.config.portalBio = data.config.PortalBio || "";
-                state.config.socialHandle = data.config.SocialHandle || "@cabgcu";
-                state.config.avatarUrl = data.config.AvatarUrl || "";
-                state.config.links = JSON.parse(data.config.LinksJson || "[]");
-                state.config.bgImages = data.config.bgImages || [];
-                renderPortal();
-                initBackgroundRotation();
+            const [configRes, bgRes] = await Promise.all([
+                _supabase.from('portal_config').select('*'),
+                _supabase.from('background_images').select('url')
+            ]);
+
+            if (configRes.data) {
+                configRes.data.forEach(row => {
+                    if (row.key === "PortalName") state.config.portalName = row.value;
+                    if (row.key === "PortalBio") state.config.portalBio = row.value;
+                    if (row.key === "SocialHandle") state.config.socialHandle = row.value;
+                    if (row.key === "AvatarUrl") state.config.avatarUrl = row.value;
+                    if (row.key === "LinksJson") state.config.links = JSON.parse(row.value || "[]");
+                });
             }
-        } finally { document.getElementById('loading-overlay').style.display = 'none'; }
+
+            if (bgRes.data) {
+                state.config.bgImages = bgRes.data.map(r => r.url);
+            }
+
+            renderPortal();
+            initBackgroundRotation();
+        } catch (e) {
+            console.error("Sync error:", e);
+        } finally { 
+            document.getElementById('loading-overlay').style.display = 'none'; 
+        }
     }
 
     function renderPortal() {
@@ -277,30 +289,51 @@
         const pass = document.getElementById('adminPass').value;
         const loader = document.getElementById('gateLoader');
         loader.style.display = "inline-block";
+        
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "verifyPassword", password: pass }) });
-            const result = await res.json();
-            if (result.success) { hideGate(); switchView('admin'); } 
-            else { alert("Incorrect Password"); }
-        } catch (e) { alert("Error connecting"); }
+            const { data } = await _supabase
+                .from('portal_config')
+                .select('value')
+                .eq('key', 'AdminPassword')
+                .single();
+
+            if (data && data.value === pass) { 
+                hideGate(); 
+                switchView('admin'); 
+            } else { 
+                alert("Incorrect Password"); 
+            }
+        } catch (e) { alert("Error connecting to database"); }
         loader.style.display = "none";
     }
 
     async function saveAdminSettings() {
         const btn = document.getElementById('saveBtn');
         const loader = document.getElementById('saveLoader');
-        const newConfig = {
-            PortalName: document.getElementById('setProfileName').value,
-            PortalBio: document.getElementById('setProfileBio').value,
-            SocialHandle: document.getElementById('setSocialHandle').value,
-            AvatarUrl: document.getElementById('setAvatarUrl').value,
-            LinksJson: JSON.stringify(state.config.links)
-        };
+        
+        const updates = [
+            { key: 'PortalName', value: document.getElementById('setProfileName').value },
+            { key: 'PortalBio', value: document.getElementById('setProfileBio').value },
+            { key: 'SocialHandle', value: document.getElementById('setSocialHandle').value },
+            { key: 'AvatarUrl', value: document.getElementById('setAvatarUrl').value },
+            { key: 'LinksJson', value: JSON.stringify(state.config.links) }
+        ];
+
         btn.disabled = true; loader.style.display = "inline-block";
+        
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "updateConfig", config: newConfig }) });
+            for (const item of updates) {
+                await _supabase
+                    .from('portal_config')
+                    .update({ value: item.value })
+                    .eq('key', item.key);
+            }
             location.reload();
-        } catch (e) { alert("Save Failed"); btn.disabled = false; loader.style.display = "none"; }
+        } catch (e) { 
+            alert("Save Failed"); 
+            btn.disabled = false; 
+            loader.style.display = "none"; 
+        }
     }
 
     function initBackgroundRotation() {
@@ -309,7 +342,7 @@
         container.innerHTML = state.config.bgImages.map((url, i) => `<div class="bg-slide ${i === 0 ? 'active' : ''}" style="background-image: url('${url}')"></div>`).join('');
         setInterval(() => {
             const slides = document.querySelectorAll('.bg-slide');
-            if (slides.length > 0) {
+            if (slides.length > 1) {
                 slides[state.bgIndex].classList.remove('active');
                 state.bgIndex = (state.bgIndex + 1) % slides.length;
                 slides[state.bgIndex].classList.add('active');
