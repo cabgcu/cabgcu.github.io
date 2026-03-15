@@ -79,7 +79,8 @@
         .profile-name { font-size: 1.6rem; font-weight: 700; margin: 0 0 8px; }
         .profile-bio { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0 auto; max-width: 85%; }
         
-        .social-handle-tag { display: inline-block; margin-top: 12px; font-size: 0.85rem; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 100px; text-decoration: none; }
+        .social-handle-tag { display: inline-block; margin-top: 12px; font-size: 0.85rem; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 100px; text-decoration: none; transition: 0.3s;}
+        .social-handle-tag:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
 
         .links-container { width: 100%; display: flex; flex-direction: column; gap: 12px; }
         .link-item { width: 100%; padding: 16px 20px; border-radius: var(--radius-btn); background: var(--glass-surface); border: 1px solid var(--glass-border); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 600; transition: 0.3s; }
@@ -104,11 +105,25 @@
         
         .list-manager { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; }
         .list-row { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; gap: 8px; border: 1px solid var(--glass-border); }
-        .list-name { flex: 1; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; }
+        .list-name { flex: 1; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .move-btns { display: flex; gap: 4px; }
         .move-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; }
         .list-remove { color: #FF3B30; cursor: pointer; font-weight: bold; padding: 0 8px; }
         
+        .icon-edit-input {
+            width: 40px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            padding: 6px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .icon-edit-input:focus { border-color: #0A84FF; }
+
         .loader { display: none; width: 16px; height: 16px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 1s linear infinite; margin-left: 10px; }
     </style>
 </head>
@@ -124,6 +139,7 @@
             <div class="avatar-frame" id="avatarFrame" style="display: none;"><img id="profileImg" src="" alt="Profile" class="avatar"></div>
             <h1 class="profile-name" id="portalName">CAB GCU</h1>
             <p class="profile-bio" id="portalBio"></p>
+            <!-- Social Handle will dynamically turn into an Instagram link -->
             <a href="#" id="portalHandle" class="social-handle-tag" style="display: none;"></a>
         </div>
         <div class="links-container" id="linksContainer"></div>
@@ -138,16 +154,20 @@
             <div class="form-group">
                 <label class="form-label">Branding</label>
                 <input type="text" id="setProfileName" class="control-item" placeholder="Display Name">
-                <input type="text" id="setSocialHandle" class="control-item" placeholder="Handle">
+                <input type="text" id="setSocialHandle" class="control-item" placeholder="Instagram Handle (e.g. @cabgcu)">
                 <textarea id="setProfileBio" class="control-item" placeholder="Bio..." style="min-height:70px;"></textarea>
                 <input type="text" id="setAvatarUrl" class="control-item" placeholder="Avatar URL">
             </div>
             <div class="form-group">
-                <label class="form-label">Manage Link Order</label>
+                <label class="form-label">Manage Links & Emojis</label>
                 <div id="link-list-manager" class="list-manager"></div>
-                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 18px; border: 1px dashed rgba(255,255,255,0.2);">
-                    <input type="text" id="newLinkTitle" class="control-item" placeholder="Title">
-                    <input type="text" id="newLinkUrl" class="control-item" placeholder="URL">
+                
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 18px; border: 1px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newLinkIcon" class="control-item" placeholder="Emoji (🔗)" style="width: 80px; text-align: center; margin-bottom: 0;">
+                        <input type="text" id="newLinkTitle" class="control-item" placeholder="Title" style="flex: 1; margin-bottom: 0;">
+                    </div>
+                    <input type="text" id="newLinkUrl" class="control-item" placeholder="URL" style="margin-bottom: 0;">
                     <button class="btn btn-primary" onclick="addLinkUI()">Add New Link</button>
                 </div>
             </div>
@@ -216,9 +236,19 @@
     function renderPortal() {
         document.getElementById('portalName').textContent = state.config.portalName;
         document.getElementById('portalBio').textContent = state.config.portalBio;
+        
         const handleEl = document.getElementById('portalHandle');
-        handleEl.style.display = state.config.socialHandle ? 'inline-block' : 'none';
-        handleEl.textContent = state.config.socialHandle;
+        if (state.config.socialHandle) {
+            handleEl.style.display = 'inline-block';
+            handleEl.textContent = state.config.socialHandle;
+            
+            // Turn handle into Instagram URL (remove @ if present)
+            const cleanHandle = state.config.socialHandle.replace('@', '').trim();
+            handleEl.href = `https://instagram.com/${cleanHandle}`;
+            handleEl.target = "_blank";
+        } else {
+            handleEl.style.display = 'none';
+        }
         
         const avatarFrame = document.getElementById('avatarFrame');
         if (state.config.avatarUrl) {
@@ -245,6 +275,7 @@
         const mgr = document.getElementById('link-list-manager');
         mgr.innerHTML = state.config.links.map((l, i) => `
             <div class="list-row">
+                <input type="text" class="icon-edit-input" value="${l.icon || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
                 <span class="list-name">${l.title}</span>
                 <div class="move-btns">
                     <button class="move-btn" onclick="moveLink(${i}, -1)">▲</button>
@@ -253,6 +284,10 @@
                 <div class="list-remove" onclick="removeLink(${i})">&times;</div>
             </div>
         `).join('');
+    }
+
+    function updateLinkIcon(idx, newIcon) {
+        state.config.links[idx].icon = newIcon || '🔗';
     }
 
     function moveLink(index, direction) {
@@ -267,10 +302,14 @@
     function removeLink(idx) { state.config.links.splice(idx,1); renderAdminLinks(); }
     
     function addLinkUI() {
+        const i = document.getElementById('newLinkIcon').value || '🔗';
         const t = document.getElementById('newLinkTitle').value;
         const u = document.getElementById('newLinkUrl').value;
         if(!t || !u) return;
-        state.config.links.push({title:t, url:u, icon:"🔗"});
+        
+        state.config.links.push({title:t, url:u, icon: i});
+        
+        document.getElementById('newLinkIcon').value = '';
         document.getElementById('newLinkTitle').value = '';
         document.getElementById('newLinkUrl').value = '';
         renderAdminLinks();
