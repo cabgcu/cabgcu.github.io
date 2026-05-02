@@ -4,555 +4,586 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>CAB Portal</title>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    animation: { 'blob': 'blob 20s infinite ease-in-out' },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(40vw, 30vh) scale(1.2)' },
+                            '66%': { transform: 'translate(-30vw, 20vh) scale(0.8)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        :root {
-            --bg-dark: #000000;
-            --glass-surface: rgba(0, 0, 0, 0.65); 
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --text-main: #ffffff;
-            --text-muted: #d1d1d6;
-            --gradient-accent: linear-gradient(135deg, #0A84FF, #BF5AF2);
-            --radius-card: 32px;
-            --radius-btn: 20px; 
-            --blur-bg: 4px; 
-            --blur-card: 20px;
-            --max-width-content: 500px;
-        }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 1); }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.8); }
+
+        /* Glassmorphism utilities */
+        .glass-card {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
         
-        body { 
-            margin: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
-            color: var(--text-main); 
-            background-color: var(--bg-dark); 
-            height: 100dvh;
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
+        .glass-button {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
+        /* View Switching Logic */
+        .view { display: none; opacity: 0; transform: translateY(15px); transition: 0.4s ease; }
+        .view.active { display: flex; opacity: 1; transform: translateY(0); }
+
+        /* Overlays & Loaders */
         #loading-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
+            position: fixed; inset: 0; z-index: 9999; background: #000;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
         }
-
         .loading-logo { width: 90px; height: 90px; animation: smooth-spin 1.2s linear infinite; }
+        .loader { display: none; width: 16px; height: 16px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 1s linear infinite; }
+        
         @keyframes smooth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: #000; }
+        /* Dynamic Backgrounds */
+        #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -3; background: #000; }
         .bg-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease-in-out; }
         .bg-slide.active { opacity: 0.6; }
-        #bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(var(--blur-bg)); -webkit-backdrop-filter: blur(var(--blur-bg)); }
 
-        .app-container { 
-            position: relative; 
-            width: 100%; 
-            max-width: var(--max-width-content); 
-            height: 100%;
-            margin: 0 auto; 
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            display: flex;
-            flex-direction: column;
+        /* Admin Input styling */
+        .control-input {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; border-radius: 0.75rem; padding: 0.8rem 1rem; margin-bottom: 0.75rem; 
+            outline: none; transition: all 0.2s ease;
         }
-
-        /* Safe vertical centering: pushes content to middle, but allows normal scrolling without cutting off the top */
-        .app-container::before,
-        .app-container::after {
-            content: "";
-            margin: auto;
-        }
-        
-        .app-container::-webkit-scrollbar { display: none; }
-
-        .view { display: none; width: 100%; opacity: 0; transform: translateY(15px); transition: 0.4s ease; padding: 40px 20px; flex-shrink: 0; }
-        .view.active { display: block; opacity: 1; transform: translateY(0); }
-
-        .profile-header { text-align: center; margin-bottom: 36px; }
-        .avatar-frame { width: 70px; height: 70px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
-        .avatar { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
-        .profile-name { font-size: 1.6rem; font-weight: 700; margin: 0 0 8px; }
-        .profile-bio { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0 auto; max-width: 85%; white-space: pre-wrap; }
-        
-        .social-handle-tag { display: inline-block; margin-top: 12px; font-size: 0.85rem; color: #fff; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 100px; text-decoration: none; transition: 0.3s;}
-        .social-handle-tag:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
-
-        .links-container { width: 100%; display: flex; flex-direction: column; gap: 12px; }
-        .link-item { width: 100%; padding: 16px 20px; border-radius: var(--radius-btn); background: var(--glass-surface); border: 1px solid var(--glass-border); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 600; transition: 0.3s; }
-        .link-item:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.12); }
-
-        .frosted-card { background: var(--glass-surface); backdrop-filter: blur(var(--blur-card)); -webkit-backdrop-filter: blur(var(--blur-card)); border: 1px solid var(--glass-border); padding: 24px; border-radius: var(--radius-card); }
-        .form-group { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .form-group:last-of-type { border-bottom: none; margin-bottom: 16px; padding-bottom: 0; }
-        
-        .form-label { display: block; margin-bottom: 12px; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .control-item { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 16px; border-radius: 14px; margin-bottom: 10px; outline: none; }
-        
-        .btn { padding: 16px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; width: 100%; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s;}
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-primary { background: var(--gradient-accent); color: white; }
-        .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); }
-        
-        footer { margin-top: 32px; text-align: center; color: rgba(255, 255, 255, 0.3); font-size: 0.7rem; padding-bottom: 20px;}
-
-        .modal-content { 
-            position: relative; width: 95%; max-width: 380px; background: #000; border-radius: 28px; padding: 28px; border: 1px solid var(--glass-border); 
-            display: flex; flex-direction: column; gap: 20px;
-        }
-        
-        .list-manager { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; }
-        .list-row { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; gap: 8px; border: 1px solid var(--glass-border); }
-        .list-name { flex: 1; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .move-btns { display: flex; gap: 4px; }
-        .move-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; }
-        .list-remove { color: #FF3B30; cursor: pointer; font-weight: bold; padding: 0 8px; font-size: 1.2rem;}
-        
-        .icon-edit-input {
-            width: 40px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1rem;
-            padding: 6px;
-            outline: none;
-            transition: 0.2s;
-        }
-        .icon-edit-input:focus { border-color: #0A84FF; }
-
-        .loader { display: none; width: 16px; height: 16px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 1s linear infinite; }
+        .control-input:focus { border-color: rgba(168, 85, 247, 0.5); background: rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
+<body class="bg-slate-950 text-white min-h-[100dvh] relative overflow-x-hidden selection:bg-purple-500/30 font-sans">
 
-<div id="loading-overlay"><img src="https://i.imgur.com/p2qZOL5.png" alt="Logo" class="loading-logo"></div>
-<div id="bg-container"></div>
-<div id="bg-overlay"></div>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay"><img src="https://i.imgur.com/p2qZOL5.png" alt="Logo" class="loading-logo"></div>
 
-<div class="app-container">
-    <div id="portalView" class="view active">
-        <div class="profile-header">
-            <div class="avatar-frame" id="avatarFrame" style="display: none;"><img id="profileImg" src="" alt="Profile" class="avatar"></div>
-            <h1 class="profile-name" id="portalName">CAB GCU</h1>
-            <p class="profile-bio" id="portalBio"></p>
-            <a href="#" id="portalHandle" class="social-handle-tag" style="display: none;"></a>
-        </div>
-        <div class="links-container" id="linksContainer"></div>
-        <footer>
-            © <span id="year"></span> Canyon Activities Board <br>
-            <span style="opacity: 0.5; font-size: 0.6rem; cursor: pointer; padding-top: 15px; display: inline-block;" onclick="checkAuthAndShowAdmin()">ADMIN ACCESS</span>
-        </footer>
+    <!-- Background Layers -->
+    <div id="bg-container"></div>
+    
+    <!-- Animated Color Blobs -->
+    <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-[-2]">
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-[128px] opacity-60 animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-[128px] opacity-60 animate-blob" style="animation-delay: 7s;"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-fuchsia-600 rounded-full mix-blend-screen filter blur-[128px] opacity-50 animate-blob" style="animation-delay: 14s;"></div>
     </div>
 
-    <div id="adminView" class="view">
-        <div class="frosted-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h2 style="margin:0; font-size: 1.2rem;">Portal Settings</h2>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-ghost" style="width: auto; padding: 8px 14px; font-size: 0.85rem;" onclick="adminLogout()">Lock</button>
-                    <button class="btn btn-primary" style="width: auto; padding: 8px 14px; font-size: 0.85rem;" onclick="switchView('portal')">Close</button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Branding & Profile</label>
-                <input type="text" id="setProfileName" class="control-item" placeholder="Display Name">
-                <input type="text" id="setSocialHandle" class="control-item" placeholder="Instagram Handle (e.g. @cabgcu)">
-                <textarea id="setProfileBio" class="control-item" placeholder="Bio..." style="min-height:80px; resize: vertical;"></textarea>
-                <input type="text" id="setAvatarUrl" class="control-item" placeholder="Avatar Image URL">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Manage Backgrounds</label>
-                <div id="bg-list-manager" class="list-manager"></div>
-                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 18px; border: 1px dashed rgba(255,255,255,0.2);">
-                    <input type="file" id="bgUploadInput" accept="image/*" class="control-item" style="padding: 10px; margin-bottom: 12px; font-size: 0.85rem;">
-                    <button class="btn btn-ghost" onclick="uploadBackground()" id="uploadBgBtn" style="border-color: rgba(255,255,255,0.2); color: white;">
-                        Upload Image to Supabase <div class="loader" id="uploadBgLoader"></div>
-                    </button>
-                </div>
-            </div>
+    <!-- Dark Blur Overlay for readability -->
+    <div id="bg-overlay" class="fixed top-0 left-0 w-full h-full z-[-1] bg-black/40 backdrop-blur-sm"></div>
 
-            <div class="form-group">
-                <label class="form-label">Manage Links & Emojis</label>
-                <div id="link-list-manager" class="list-manager"></div>
+    <!-- Main Content Container -->
+    <main class="relative z-10 min-h-[100dvh] w-full flex justify-center p-4 sm:p-8 overflow-y-auto">
+        
+        <!-- my-auto ensures it centers vertically unless content is too tall, then it scrolls naturally -->
+        <div class="w-full max-w-md my-auto">
+            
+            <!-- PORTAL VIEW -->
+            <div id="portalView" class="view active glass-card rounded-3xl p-8 flex-col items-center text-center">
                 
-                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 18px; border: 1px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="newLinkIcon" class="control-item" placeholder="Emoji (🔗)" style="width: 80px; text-align: center; margin-bottom: 0;">
-                        <input type="text" id="newLinkTitle" class="control-item" placeholder="Link Title" style="flex: 1; margin-bottom: 0;">
-                    </div>
-                    <input type="text" id="newLinkUrl" class="control-item" placeholder="https://..." style="margin-bottom: 0;">
-                    <button class="btn btn-ghost" onclick="addLinkUI()" style="border-color: rgba(255,255,255,0.2); color: white;">Add New Link</button>
+                <!-- Profile Header -->
+                <div class="relative mb-6 flex justify-center w-full" id="avatarFrame" style="display: none;">
+                    <img id="profileImg" src="" alt="Profile Picture" class="w-20 h-20 object-contain drop-shadow-2xl">
                 </div>
+
+                <h1 id="portalName" class="text-3xl font-bold mb-2 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
+                    CAB GCU
+                </h1>
+                
+                <p id="portalBio" class="text-white/60 mb-6 font-light text-sm px-4 whitespace-pre-wrap"></p>
+
+                <a href="#" id="portalHandle" class="inline-block px-4 py-1.5 mb-8 rounded-full glass-button text-xs font-medium text-white/80 hover:text-white transition tracking-wide" style="display: none;"></a>
+
+                <!-- Links Container -->
+                <div id="linksContainer" class="w-full flex flex-col"></div>
+                
+                <!-- Footer -->
+                <footer class="mt-8 text-white/40 text-xs tracking-wider flex flex-col items-center gap-2">
+                    <div class="flex items-center space-x-1">
+                        <span>© <span id="year"></span> Canyon Activities Board</span>
+                    </div>
+                    <span class="opacity-50 text-[10px] cursor-pointer hover:opacity-100 transition-opacity uppercase tracking-widest mt-2" onclick="checkAuthAndShowAdmin()">Admin Access</span>
+                </footer>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Security</label>
-                <input type="password" id="setAdminPassword" class="control-item" placeholder="New Admin Password (leave blank to keep current)">
+            <!-- ADMIN VIEW -->
+            <div id="adminView" class="view glass-card rounded-3xl p-6 flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold tracking-tight">Portal Settings</h2>
+                    <div class="flex gap-2">
+                        <button class="glass-button px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 text-white/80" onclick="adminLogout()">
+                            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
+                        </button>
+                        <button class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition" onclick="switchView('portal')">
+                            Close
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Branding -->
+                <div class="mb-6 border-b border-white/10 pb-6">
+                    <label class="block mb-3 text-white/50 text-xs font-bold uppercase tracking-wider">Branding & Profile</label>
+                    <input type="text" id="setProfileName" class="control-input" placeholder="Display Name">
+                    <input type="text" id="setSocialHandle" class="control-input" placeholder="Instagram Handle (e.g. @cabgcu)">
+                    <textarea id="setProfileBio" class="control-input resize-y min-h-[80px]" placeholder="Bio..."></textarea>
+                    <input type="text" id="setAvatarUrl" class="control-input !mb-0" placeholder="Avatar Image URL">
+                </div>
+                
+                <!-- Backgrounds -->
+                <div class="mb-6 border-b border-white/10 pb-6">
+                    <label class="block mb-3 text-white/50 text-xs font-bold uppercase tracking-wider">Manage Backgrounds</label>
+                    <div id="bg-list-manager" class="flex flex-col gap-2 mb-4 max-h-[200px] overflow-y-auto pr-1"></div>
+                    
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 border-dashed">
+                        <input type="file" id="bgUploadInput" accept="image/*" class="w-full text-sm text-white/60 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer">
+                        <button class="glass-button w-full py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2" onclick="uploadBackground()" id="uploadBgBtn">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload to Supabase 
+                            <div class="loader" id="uploadBgLoader"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Links -->
+                <div class="mb-6 border-b border-white/10 pb-6">
+                    <label class="block mb-3 text-white/50 text-xs font-bold uppercase tracking-wider">Manage Links</label>
+                    <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[250px] overflow-y-auto pr-1"></div>
+                    
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 border-dashed flex flex-col gap-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="newLinkIcon" class="control-input !mb-0 w-16 text-center text-lg" placeholder="🔗">
+                            <input type="text" id="newLinkTitle" class="control-input !mb-0 flex-1" placeholder="Link Title">
+                        </div>
+                        <input type="text" id="newLinkUrl" class="control-input !mb-0" placeholder="https://...">
+                        <button class="glass-button w-full py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2" onclick="addLinkUI()">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add New Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Security -->
+                <div class="mb-6">
+                    <label class="block mb-3 text-white/50 text-xs font-bold uppercase tracking-wider">Security</label>
+                    <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep)">
+                </div>
+                
+                <button class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg" id="saveBtn" onclick="saveAdminSettings()">
+                    Save All Changes <div class="loader" id="saveLoader"></div>
+                </button>
             </div>
+        </div>
+    </main>
+
+    <!-- Admin Login Modal -->
+    <div id="gateModal" class="fixed inset-0 z-[1000]" style="display: none;">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md" onclick="hideGate()"></div>
+        <!-- Modal Content -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl">
+            <div class="w-16 h-16 bg-white/10 rounded-2xl p-2 mb-4 flex items-center justify-center border border-white/10">
+                <img src="https://i.imgur.com/p2qZOL5.png" alt="CAB" class="w-full h-full object-contain rounded-xl">
+            </div>
+            <h3 class="text-2xl font-bold mb-1">Admin Access</h3>
+            <p class="text-white/50 text-sm mb-6">Enter your credentials to continue</p>
             
-            <button class="btn btn-primary" id="saveBtn" onclick="saveAdminSettings()">
-                Save All Changes <div class="loader" id="saveLoader"></div>
+            <input type="email" id="adminEmail" class="control-input text-center" placeholder="Admin Email">
+            <input type="password" id="adminPass" class="control-input text-center mb-6" placeholder="Password" onkeyup="if(event.key==='Enter') verifyAdmin()">
+            
+            <button class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-all" id="gateBtn" onclick="verifyAdmin()">
+                Authorize <div class="loader" id="gateLoader"></div>
             </button>
         </div>
     </div>
-</div>
 
-<div id="gateModal" class="modal" style="position: fixed; inset: 0; z-index: 1000; display: none; justify-content: center; align-items: center;">
-    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);" onclick="hideGate()"></div>
-    <div class="modal-content frosted-card" style="align-items: center; text-align: center; max-width: 340px; padding: 36px 24px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-        <img src="https://i.imgur.com/p2qZOL5.png" alt="CAB Logo" style="width: 70px; height: 70px; margin-bottom: 8px; border-radius: 12px; object-fit: contain;">
-        <h3 style="margin:0; font-size: 1.4rem; font-weight: 700;">Admin Access</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; margin-bottom: 20px;">Enter your credentials to continue.</p>
-        <input type="email" id="adminEmail" class="control-item" placeholder="Admin Email" style="margin-bottom: 12px; text-align: center; font-size: 1rem;">
-        <input type="password" id="adminPass" class="control-item" placeholder="Password" style="margin:0; text-align: center; font-size: 1rem;" onkeyup="if(event.key==='Enter') verifyAdmin()">
-        <button class="btn btn-primary" id="gateBtn" onclick="verifyAdmin()" style="margin-top: 8px;">Authorize <div class="loader" id="gateLoader"></div></button>
-    </div>
-</div>
+    <!-- JavaScript Application Logic -->
+    <script>
+        const SUPABASE_URL = "https://nmmshjdknmuzpgpquwec.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_PCxlxywY7W6K3TmMrSnSsw_NPXKugoZ";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<script>
-    const SUPABASE_URL = "https://nmmshjdknmuzpgpquwec.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_PCxlxywY7W6K3TmMrSnSsw_NPXKugoZ";
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let state = {
+            config: { portalName: "CAB GCU", portalBio: "", socialHandle: "@cabgcu", avatarUrl: "", links: [] },
+            bgImages: [],
+            bgIndex: 0,
+            bgRotationInterval: null
+        };
 
-    let state = {
-        config: { portalName: "CAB GCU", portalBio: "", socialHandle: "@cabgcu", avatarUrl: "", links: [] },
-        bgImages: [],
-        bgIndex: 0,
-        bgRotationInterval: null
-    };
-
-    // --- SECURITY HELPER ---
-    // This prevents Cross-Site Scripting (XSS) by neutralizing malicious HTML tags
-    function escapeHTML(str) {
-        if (!str) return '';
-        return str.toString().replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[tag] || tag));
-    }
-
-    document.getElementById('year').textContent = new Date().getFullYear();
-    syncData();
-
-    async function syncData() {
-        try {
-            const [configRes, bgRes] = await Promise.all([
-                _supabase.from('portal_config').select('*'),
-                _supabase.from('background_images').select('*')
-            ]);
-
-            if (configRes.data) {
-                configRes.data.forEach(row => {
-                    if (row.key === "PortalName") state.config.portalName = row.value;
-                    if (row.key === "PortalBio") state.config.portalBio = row.value;
-                    if (row.key === "SocialHandle") state.config.socialHandle = row.value;
-                    if (row.key === "AvatarUrl") state.config.avatarUrl = row.value;
-                    if (row.key === "LinksJson") state.config.links = JSON.parse(row.value || "[]");
-                });
-            }
-
-            if (bgRes.data) {
-                state.bgImages = bgRes.data;
-            }
-
-            renderPortal();
-            initBackgroundRotation();
-        } catch (e) {
-            console.error("Sync error:", e);
-        } finally { 
-            document.getElementById('loading-overlay').style.display = 'none'; 
+        // --- SECURITY HELPER ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
         }
-    }
 
-    function renderPortal() {
-        document.getElementById('portalName').textContent = state.config.portalName;
-        document.getElementById('portalBio').textContent = state.config.portalBio;
-        
-        const handleEl = document.getElementById('portalHandle');
-        if (state.config.socialHandle) {
-            handleEl.style.display = 'inline-block';
-            handleEl.textContent = state.config.socialHandle;
+        document.getElementById('year').textContent = new Date().getFullYear();
+        syncData();
+
+        async function syncData() {
+            try {
+                const [configRes, bgRes] = await Promise.all([
+                    _supabase.from('portal_config').select('*'),
+                    _supabase.from('background_images').select('*')
+                ]);
+
+                if (configRes.data) {
+                    configRes.data.forEach(row => {
+                        if (row.key === "PortalName") state.config.portalName = row.value;
+                        if (row.key === "PortalBio") state.config.portalBio = row.value;
+                        if (row.key === "SocialHandle") state.config.socialHandle = row.value;
+                        if (row.key === "AvatarUrl") state.config.avatarUrl = row.value;
+                        if (row.key === "LinksJson") state.config.links = JSON.parse(row.value || "[]");
+                    });
+                }
+
+                if (bgRes.data) {
+                    state.bgImages = bgRes.data;
+                }
+
+                renderPortal();
+                initBackgroundRotation();
+            } catch (e) {
+                console.error("Sync error:", e);
+            } finally { 
+                document.getElementById('loading-overlay').style.display = 'none'; 
+            }
+        }
+
+        function renderPortal() {
+            document.getElementById('portalName').textContent = state.config.portalName;
+            document.getElementById('portalBio').textContent = state.config.portalBio;
             
-            const cleanHandle = state.config.socialHandle.replace('@', '').trim();
-            handleEl.href = `https://instagram.com/${cleanHandle}`;
-            handleEl.target = "_blank";
-        } else {
-            handleEl.style.display = 'none';
-        }
-        
-        const avatarFrame = document.getElementById('avatarFrame');
-        if (state.config.avatarUrl) {
-            document.getElementById('profileImg').src = state.config.avatarUrl;
-            avatarFrame.style.display = 'flex';
-        } else { avatarFrame.style.display = 'none'; }
+            const handleEl = document.getElementById('portalHandle');
+            if (state.config.socialHandle) {
+                handleEl.style.display = 'inline-block';
+                handleEl.textContent = state.config.socialHandle;
+                const cleanHandle = state.config.socialHandle.replace('@', '').trim();
+                handleEl.href = `https://instagram.com/${cleanHandle}`;
+                handleEl.target = "_blank";
+            } else {
+                handleEl.style.display = 'none';
+            }
+            
+            const avatarFrame = document.getElementById('avatarFrame');
+            if (state.config.avatarUrl) {
+                document.getElementById('profileImg').src = state.config.avatarUrl;
+                avatarFrame.style.display = 'flex';
+            } else { avatarFrame.style.display = 'none'; }
 
-        // Sanitize link URLs, icons, and titles before rendering them as HTML
-        document.getElementById('linksContainer').innerHTML = state.config.links.map(link => `
-            <a href="${escapeHTML(link.url)}" target="_blank" class="link-item">
-                <span style="margin-right: 10px; font-size: 1.1rem;">${escapeHTML(link.icon) || '🔗'}</span> ${escapeHTML(link.title)}
-            </a>
-        `).join('');
-    }
-
-    function loadAdminValues() {
-        document.getElementById('setProfileName').value = state.config.portalName;
-        document.getElementById('setProfileBio').value = state.config.portalBio;
-        document.getElementById('setSocialHandle').value = state.config.socialHandle;
-        document.getElementById('setAvatarUrl').value = state.config.avatarUrl;
-        document.getElementById('setAdminPassword').value = '';
-        renderAdminLinks();
-        renderAdminBackgrounds();
-    }
-
-    // --- Background Management ---
-    function renderAdminBackgrounds() {
-        const mgr = document.getElementById('bg-list-manager');
-        if (!state.bgImages || state.bgImages.length === 0) {
-            mgr.innerHTML = `<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size: 0.85rem;">No custom backgrounds.</div>`;
-            return;
+            // Generate glass buttons for links
+            document.getElementById('linksContainer').innerHTML = state.config.links.map(link => `
+                <a href="${escapeHTML(link.url)}" target="_blank" class="glass-button w-full py-4 px-6 rounded-xl relative flex items-center justify-center group mb-3">
+                    <span class="absolute left-6 text-xl">${escapeHTML(link.icon) || '🔗'}</span>
+                    <span class="font-medium tracking-wide text-white/90 text-center px-8">${escapeHTML(link.title)}</span>
+                    <i data-lucide="chevron-right" class="absolute right-6 w-5 h-5 text-white/30 group-hover:text-white/70 transition-colors"></i>
+                </a>
+            `).join('');
+            
+            // Re-initialize Lucide Icons after dynamic DOM injection
+            lucide.createIcons();
         }
 
-        mgr.innerHTML = state.bgImages.map((b, i) => `
-            <div class="list-row">
-                <div style="width: 36px; height: 36px; border-radius: 6px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2);">
-                    <img src="${b.url}" style="width:100%; height:100%; object-fit: cover;">
+        function loadAdminValues() {
+            document.getElementById('setProfileName').value = state.config.portalName;
+            document.getElementById('setProfileBio').value = state.config.portalBio;
+            document.getElementById('setSocialHandle').value = state.config.socialHandle;
+            document.getElementById('setAvatarUrl').value = state.config.avatarUrl;
+            document.getElementById('setAdminPassword').value = '';
+            renderAdminLinks();
+            renderAdminBackgrounds();
+        }
+
+        // --- Background Management ---
+        function renderAdminBackgrounds() {
+            const mgr = document.getElementById('bg-list-manager');
+            if (!state.bgImages || state.bgImages.length === 0) {
+                mgr.innerHTML = `<div class="text-center p-3 text-white/40 text-sm italic">No custom backgrounds.</div>`;
+                return;
+            }
+
+            mgr.innerHTML = state.bgImages.map((b, i) => `
+                <div class="flex items-center bg-white/5 p-2 rounded-xl border border-white/10 gap-3">
+                    <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/20">
+                        <img src="${b.url}" class="w-full h-full object-cover">
+                    </div>
+                    <span class="flex-1 text-sm text-white/80">Image ${i + 1}</span>
+                    <button class="text-red-400 hover:text-red-300 p-2 transition" onclick="deleteBackground('${b.url}')" title="Delete">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
                 </div>
-                <span class="list-name" style="margin-left: 8px;">Image ${i + 1}</span>
-                <div class="list-remove" onclick="deleteBackground('${b.url}')" title="Delete">&times;</div>
-            </div>
-        `).join('');
-    }
+            `).join('');
+            lucide.createIcons();
+        }
 
-    async function uploadBackground() {
-        const input = document.getElementById('bgUploadInput');
-        const file = input.files[0];
-        if (!file) return alert("Please select an image file first.");
+        async function uploadBackground() {
+            const input = document.getElementById('bgUploadInput');
+            const file = input.files[0];
+            if (!file) return alert("Please select an image file first.");
 
-        const btn = document.getElementById('uploadBgBtn');
-        const loader = document.getElementById('uploadBgLoader');
-        btn.disabled = true;
-        loader.style.display = "inline-block";
+            const btn = document.getElementById('uploadBgBtn');
+            const loader = document.getElementById('uploadBgLoader');
+            btn.disabled = true;
+            loader.style.display = "inline-block";
 
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-            const { data: uploadData, error: uploadError } = await _supabase.storage
-                .from('backgrounds')
-                .upload(fileName, file);
+                const { data: uploadData, error: uploadError } = await _supabase.storage
+                    .from('backgrounds')
+                    .upload(fileName, file);
 
-            if (uploadError) throw uploadError;
+                if (uploadError) throw uploadError;
 
-            const { data } = _supabase.storage.from('backgrounds').getPublicUrl(fileName);
-            const publicUrl = data.publicUrl;
+                const { data } = _supabase.storage.from('backgrounds').getPublicUrl(fileName);
+                const publicUrl = data.publicUrl;
 
-            const { data: insertData, error: insertError } = await _supabase
-                .from('background_images')
-                .insert([{ url: publicUrl }])
-                .select();
+                const { data: insertData, error: insertError } = await _supabase
+                    .from('background_images')
+                    .insert([{ url: publicUrl }])
+                    .select();
 
-            if (insertError) throw insertError;
+                if (insertError) throw insertError;
 
-            state.bgImages.push(insertData ? insertData[0] : { url: publicUrl });
-            input.value = ""; 
+                state.bgImages.push(insertData ? insertData[0] : { url: publicUrl });
+                input.value = ""; 
+                renderAdminBackgrounds();
+                initBackgroundRotation();
+
+            } catch (error) {
+                console.error(error);
+                alert("Upload failed. Make sure you have created a public Storage bucket named 'backgrounds'.");
+            } finally {
+                btn.disabled = false;
+                loader.style.display = "none";
+            }
+        }
+
+        async function deleteBackground(url) {
+            if (!confirm("Are you sure you want to delete this background?")) return;
+            
+            try {
+                const fileName = url.split('/backgrounds/').pop();
+                if (fileName && fileName !== url) {
+                    await _supabase.storage.from('backgrounds').remove([fileName]);
+                }
+            } catch(e) { console.warn("Could not delete from storage bucket", e); }
+
+            await _supabase.from('background_images').delete().eq('url', url);
+            
+            state.bgImages = state.bgImages.filter(b => b.url !== url);
             renderAdminBackgrounds();
             initBackgroundRotation();
+        }
 
-        } catch (error) {
-            console.error(error);
-            alert("Upload failed. Make sure you have created a public Storage bucket named 'backgrounds'.");
-        } finally {
-            btn.disabled = false;
+        // --- Link Management ---
+        function renderAdminLinks() {
+            const mgr = document.getElementById('link-list-manager');
+            mgr.innerHTML = state.config.links.map((l, i) => `
+                <div class="flex items-center bg-white/5 p-2 rounded-xl border border-white/10 gap-2">
+                    <input type="text" class="w-10 bg-black/30 border border-white/20 text-white rounded-lg text-center py-1.5 outline-none focus:border-purple-500 transition" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
+                    <span class="flex-1 text-sm text-white/90 truncate pl-1">${escapeHTML(l.title)}</span>
+                    <div class="flex gap-1">
+                        <button class="bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg transition" onclick="moveLink(${i}, -1)"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
+                        <button class="bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg transition" onclick="moveLink(${i}, 1)"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                    <button class="text-red-400 hover:text-red-300 p-2 transition" onclick="removeLink(${i})" title="Delete">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updateLinkIcon(idx, newIcon) { state.config.links[idx].icon = newIcon || '🔗'; }
+
+        function moveLink(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= state.config.links.length) return;
+            const temp = state.config.links[index];
+            state.config.links[index] = state.config.links[newIndex];
+            state.config.links[newIndex] = temp;
+            renderAdminLinks();
+        }
+
+        function removeLink(idx) { state.config.links.splice(idx,1); renderAdminLinks(); }
+        
+        function addLinkUI() {
+            const i = document.getElementById('newLinkIcon').value || '🔗';
+            const t = document.getElementById('newLinkTitle').value;
+            const u = document.getElementById('newLinkUrl').value;
+            if(!t || !u) return;
+            
+            state.config.links.push({title:t, url:u, icon: i});
+            
+            document.getElementById('newLinkIcon').value = '';
+            document.getElementById('newLinkTitle').value = '';
+            document.getElementById('newLinkUrl').value = '';
+            renderAdminLinks();
+        }
+
+        // --- View Navigation & Auth ---
+        function switchView(v) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(v + 'View').classList.add('active');
+            if(v === 'admin') loadAdminValues();
+            // Scroll to top of main container smoothly
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function checkAuthAndShowAdmin() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                switchView('admin');
+            } else {
+                showGate();
+            }
+        }
+
+        async function adminLogout() {
+            await _supabase.auth.signOut();
+            switchView('portal');
+        }
+
+        function showGate() { document.getElementById('gateModal').style.display = 'block'; }
+        function hideGate() { 
+            document.getElementById('gateModal').style.display = 'none'; 
+            document.getElementById('adminEmail').value = "";
+            document.getElementById('adminPass').value = ""; 
+        }
+
+        async function verifyAdmin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const pass = document.getElementById('adminPass').value;
+            const loader = document.getElementById('gateLoader');
+            
+            if (!email || !pass) return alert("Please enter both email and password.");
+            
+            loader.style.display = "inline-block";
+            
+            try {
+                const { data, error } = await _supabase.auth.signInWithPassword({
+                    email: email,
+                    password: pass
+                });
+
+                if (error) {
+                    alert(error.message);
+                } else if (data.session) {
+                    hideGate();
+                    switchView('admin');
+                }
+            } catch (e) { alert("Error connecting to authentication service"); }
             loader.style.display = "none";
         }
-    }
 
-    async function deleteBackground(url) {
-        if (!confirm("Are you sure you want to delete this background?")) return;
-        
-        try {
-            const fileName = url.split('/backgrounds/').pop();
-            if (fileName && fileName !== url) {
-                await _supabase.storage.from('backgrounds').remove([fileName]);
-            }
-        } catch(e) { console.warn("Could not delete from storage bucket", e); }
+        async function saveAdminSettings() {
+            const btn = document.getElementById('saveBtn');
+            const loader = document.getElementById('saveLoader');
+            
+            const updates = [
+                { key: 'PortalName', value: document.getElementById('setProfileName').value },
+                { key: 'PortalBio', value: document.getElementById('setProfileBio').value },
+                { key: 'SocialHandle', value: document.getElementById('setSocialHandle').value },
+                { key: 'AvatarUrl', value: document.getElementById('setAvatarUrl').value },
+                { key: 'LinksJson', value: JSON.stringify(state.config.links) }
+            ];
 
-        await _supabase.from('background_images').delete().eq('url', url);
-        
-        state.bgImages = state.bgImages.filter(b => b.url !== url);
-        renderAdminBackgrounds();
-        initBackgroundRotation();
-    }
-
-    // --- Link Management ---
-    function renderAdminLinks() {
-        const mgr = document.getElementById('link-list-manager');
-        // Sanitize the text rendered in the admin list view as well
-        mgr.innerHTML = state.config.links.map((l, i) => `
-            <div class="list-row">
-                <input type="text" class="icon-edit-input" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
-                <span class="list-name">${escapeHTML(l.title)}</span>
-                <div class="move-btns">
-                    <button class="move-btn" onclick="moveLink(${i}, -1)">▲</button>
-                    <button class="move-btn" onclick="moveLink(${i}, 1)">▼</button>
-                </div>
-                <div class="list-remove" onclick="removeLink(${i})" title="Delete">&times;</div>
-            </div>
-        `).join('');
-    }
-
-    function updateLinkIcon(idx, newIcon) { state.config.links[idx].icon = newIcon || '🔗'; }
-
-    function moveLink(index, direction) {
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= state.config.links.length) return;
-        const temp = state.config.links[index];
-        state.config.links[index] = state.config.links[newIndex];
-        state.config.links[newIndex] = temp;
-        renderAdminLinks();
-    }
-
-    function removeLink(idx) { state.config.links.splice(idx,1); renderAdminLinks(); }
-    
-    function addLinkUI() {
-        const i = document.getElementById('newLinkIcon').value || '🔗';
-        const t = document.getElementById('newLinkTitle').value;
-        const u = document.getElementById('newLinkUrl').value;
-        if(!t || !u) return;
-        
-        state.config.links.push({title:t, url:u, icon: i});
-        
-        document.getElementById('newLinkIcon').value = '';
-        document.getElementById('newLinkTitle').value = '';
-        document.getElementById('newLinkUrl').value = '';
-        renderAdminLinks();
-    }
-
-    // --- View Navigation & Auth ---
-    function switchView(v) {
-        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-        document.getElementById(v + 'View').classList.add('active');
-        if(v === 'admin') loadAdminValues();
-        document.querySelector('.app-container').scrollTo(0, 0);
-    }
-
-    async function checkAuthAndShowAdmin() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-            switchView('admin');
-        } else {
-            showGate();
-        }
-    }
-
-    async function adminLogout() {
-        await _supabase.auth.signOut();
-        switchView('portal');
-    }
-
-    function showGate() { document.getElementById('gateModal').style.display = 'flex'; }
-    function hideGate() { 
-        document.getElementById('gateModal').style.display = 'none'; 
-        document.getElementById('adminEmail').value = "";
-        document.getElementById('adminPass').value = ""; 
-    }
-
-    async function verifyAdmin() {
-        const email = document.getElementById('adminEmail').value.trim();
-        const pass = document.getElementById('adminPass').value;
-        const loader = document.getElementById('gateLoader');
-        
-        if (!email || !pass) return alert("Please enter both email and password.");
-        
-        loader.style.display = "inline-block";
-        
-        try {
-            const { data, error } = await _supabase.auth.signInWithPassword({
-                email: email,
-                password: pass
-            });
-
-            if (error) {
-                alert(error.message);
-            } else if (data.session) {
-                hideGate();
-                switchView('admin');
-            }
-        } catch (e) { alert("Error connecting to authentication service"); }
-        loader.style.display = "none";
-    }
-
-    async function saveAdminSettings() {
-        const btn = document.getElementById('saveBtn');
-        const loader = document.getElementById('saveLoader');
-        
-        const updates = [
-            { key: 'PortalName', value: document.getElementById('setProfileName').value },
-            { key: 'PortalBio', value: document.getElementById('setProfileBio').value },
-            { key: 'SocialHandle', value: document.getElementById('setSocialHandle').value },
-            { key: 'AvatarUrl', value: document.getElementById('setAvatarUrl').value },
-            { key: 'LinksJson', value: JSON.stringify(state.config.links) }
-        ];
-
-        btn.disabled = true; loader.style.display = "inline-block";
-        
-        try {
-            // Update Password if typed in
-            const newPass = document.getElementById('setAdminPassword').value;
-            if (newPass.trim() !== '') {
-                const { error: authError } = await _supabase.auth.updateUser({ password: newPass.trim() });
-                if (authError) throw new Error("Failed to update password: " + authError.message);
-            }
-
-            // Update DB Settings
-            for (const item of updates) {
-                await _supabase
-                    .from('portal_config')
-                    .update({ value: item.value })
-                    .eq('key', item.key);
-            }
-            location.reload();
-        } catch (e) { 
-            alert(e.message || "Save Failed"); 
-            btn.disabled = false; 
-            loader.style.display = "none"; 
-        }
-    }
-
-    function initBackgroundRotation() {
-        const container = document.getElementById('bg-container');
-        if (state.bgRotationInterval) clearInterval(state.bgRotationInterval);
-
-        if (!state.bgImages || state.bgImages.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-
-        container.innerHTML = state.bgImages.map((b, i) => `<div class="bg-slide ${i === 0 ? 'active' : ''}" style="background-image: url('${b.url}')"></div>`).join('');
-        
-        if(state.bgImages.length > 1) {
-            state.bgIndex = 0;
-            state.bgRotationInterval = setInterval(() => {
-                const slides = document.querySelectorAll('.bg-slide');
-                if (slides.length > 1) {
-                    slides[state.bgIndex].classList.remove('active');
-                    state.bgIndex = (state.bgIndex + 1) % slides.length;
-                    slides[state.bgIndex].classList.add('active');
+            btn.disabled = true; loader.style.display = "inline-block";
+            
+            try {
+                // Update Password if typed in
+                const newPass = document.getElementById('setAdminPassword').value;
+                if (newPass.trim() !== '') {
+                    const { error: authError } = await _supabase.auth.updateUser({ password: newPass.trim() });
+                    if (authError) throw new Error("Failed to update password: " + authError.message);
                 }
-            }, 6000);
+
+                // Update DB Settings
+                for (const item of updates) {
+                    await _supabase
+                        .from('portal_config')
+                        .update({ value: item.value })
+                        .eq('key', item.key);
+                }
+                location.reload();
+            } catch (e) { 
+                alert(e.message || "Save Failed"); 
+                btn.disabled = false; 
+                loader.style.display = "none"; 
+            }
         }
-    }
-</script>
+
+        function initBackgroundRotation() {
+            const container = document.getElementById('bg-container');
+            if (state.bgRotationInterval) clearInterval(state.bgRotationInterval);
+
+            if (!state.bgImages || state.bgImages.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = state.bgImages.map((b, i) => `<div class="bg-slide ${i === 0 ? 'active' : ''}" style="background-image: url('${b.url}')"></div>`).join('');
+            
+            if(state.bgImages.length > 1) {
+                state.bgIndex = 0;
+                state.bgRotationInterval = setInterval(() => {
+                    const slides = document.querySelectorAll('.bg-slide');
+                    if (slides.length > 1) {
+                        slides[state.bgIndex].classList.remove('active');
+                        state.bgIndex = (state.bgIndex + 1) % slides.length;
+                        slides[state.bgIndex].classList.add('active');
+                    }
+                }, 6000);
+            }
+        }
+        
+        // Initial setup for static icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>
