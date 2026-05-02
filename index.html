@@ -144,7 +144,7 @@
                 
                 <!-- Footer -->
                 <footer class="mt-8 text-white/40 text-xs tracking-wider flex flex-col items-center gap-2">
-                    <div class="flex items-center space-x-1">
+                    <div class="flex items-center space-x-1 whitespace-nowrap">
                         <span>© <span id="year"></span> Canyon Activities Board</span>
                     </div>
                     <span class="opacity-50 text-[10px] cursor-pointer hover:opacity-100 transition-opacity uppercase tracking-widest mt-2" onclick="checkAuthAndShowAdmin()">Admin Access</span>
@@ -315,10 +315,11 @@
             } else { avatarFrame.style.display = 'none'; }
 
             // Generate glass buttons for links
+            // Updated link span to include 'truncate w-full block px-10' to prevent multi-line wrap
             document.getElementById('linksContainer').innerHTML = state.config.links.map(link => `
-                <a href="${escapeHTML(link.url)}" target="_blank" class="glass-button w-full py-4 px-6 rounded-xl relative flex items-center justify-center group mb-3">
+                <a href="${escapeHTML(link.url)}" target="_blank" class="glass-button w-full py-4 px-6 rounded-xl relative flex items-center justify-center group mb-3 overflow-hidden">
                     <span class="absolute left-6 text-xl">${escapeHTML(link.icon) || '🔗'}</span>
-                    <span class="font-medium tracking-wide text-white/90 text-center px-8">${escapeHTML(link.title)}</span>
+                    <span class="font-medium tracking-wide text-white/90 text-center px-10 truncate w-full block">${escapeHTML(link.title)}</span>
                     <i data-lucide="chevron-right" class="absolute right-6 w-5 h-5 text-white/30 group-hover:text-white/70 transition-colors"></i>
                 </a>
             `).join('');
