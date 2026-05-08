@@ -260,9 +260,9 @@
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-md" onclick="hideGate()"></div>
         <!-- Modal Content -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl border-purple-500/30 transition-all duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.2)] hover:-translate-y-2">
-            <div class="w-20 h-20 bg-zinc-900 rounded-2xl p-2 mb-6 flex items-center justify-center border border-zinc-800 transition-transform hover:rotate-12 hover:scale-110 duration-500">
-                <img src="https://i.imgur.com/p2qZOL5.png" alt="CAB" class="w-full h-full object-contain rounded-xl invert opacity-90">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl border-purple-500/30">
+            <div class="w-20 h-20 bg-zinc-900 rounded-2xl p-2 mb-6 flex items-center justify-center border border-zinc-800">
+                <img id="adminGateImg" src="https://i.imgur.com/p2qZOL5.png" alt="CAB" class="w-full h-full object-contain rounded-xl">
             </div>
             <h3 class="text-2xl font-bold mb-1 text-white">Admin Access</h3>
             <p class="text-zinc-400 text-sm mb-8">Enter your credentials to continue</p>
@@ -354,10 +354,16 @@
             }
             
             const avatarFrame = document.getElementById('avatarFrame');
+            const adminGateImg = document.getElementById('adminGateImg');
+            
             if (state.config.avatarUrl) {
                 document.getElementById('profileImg').src = state.config.avatarUrl;
+                adminGateImg.src = state.config.avatarUrl;
                 avatarFrame.style.display = 'flex';
-            } else { avatarFrame.style.display = 'none'; }
+            } else { 
+                avatarFrame.style.display = 'none'; 
+                adminGateImg.src = "https://i.imgur.com/p2qZOL5.png";
+            }
 
             // Generate glass buttons for links
             document.getElementById('linksContainer').innerHTML = state.config.links.map((link, i) => `
