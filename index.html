@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -21,6 +21,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Outfit', 'sans-serif'] },
@@ -28,15 +29,6 @@
                         zinc: {
                             900: '#18181b',
                             950: '#09090b',
-                        }
-                    },
-                    animation: { 'blob': 'blob 20s infinite ease-in-out' },
-                    keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(40vw, 30vh) scale(1.2)' },
-                            '66%': { transform: 'translate(-30vw, 20vh) scale(0.8)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
                         }
                     }
                 }
@@ -49,25 +41,20 @@
 
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #71717a; }
 
         /* Security Input */
         .no-save-pass { -webkit-text-security: disc !important; text-security: disc !important; }
 
-        /* Dark Theme Cards (Screenshot Match) */
+        /* Dark Theme Cards */
         .glass-card {
             background: rgba(9, 9, 11, 0.65);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-        
-        .portal-card {
-            border: 1px solid rgba(168, 85, 247, 0.4);
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.05);
         }
         
         .glass-button {
@@ -94,15 +81,15 @@
             position: fixed; inset: 0; z-index: 9999; background: #09090b;
             display: flex; align-items: center; justify-content: center; pointer-events: none;
         }
-        .loading-logo { width: 90px; height: 90px; animation: smooth-spin 1.2s linear infinite; filter: invert(1); opacity: 0.8; }
+        .loading-logo { width: 90px; height: 90px; animation: smooth-spin 1.2s linear infinite; opacity: 0.8; }
         .loader { display: none; width: 16px; height: 16px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 1s linear infinite; }
         
         @keyframes smooth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Dynamic Backgrounds */
-        #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -3; background: #000; }
-        .bg-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease-in-out; }
-        .bg-slide.active { opacity: 0.8; }
+        /* Dynamic Backgrounds (Now contained in the Left Card) */
+        #bg-container { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; background: #151518; }
+        .bg-slide { position: absolute; inset: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease-in-out; }
+        .bg-slide.active { opacity: 0.9; }
 
         /* Admin Input styling */
         .control-input {
@@ -129,131 +116,147 @@
         }
     </style>
 </head>
-<body class="text-zinc-100 min-h-[100dvh] relative overflow-x-hidden selection:bg-purple-500/30 font-sans bg-black">
+<body class="text-zinc-100 min-h-[100dvh] relative overflow-x-hidden selection:bg-purple-500/30 font-sans bg-black flex items-center justify-center p-4 sm:p-8 antialiased">
 
     <!-- Loading Overlay -->
     <div id="loading-overlay"><img src="https://i.imgur.com/p2qZOL5.png" alt="Logo" class="loading-logo"></div>
 
-    <!-- Background Layers -->
-    <div id="bg-container"></div>
+    <!-- Page Background Image -->
+    <div class="fixed inset-0 bg-[url('https://i.imgur.com/4DfFmUh.png')] bg-cover bg-center bg-no-repeat bg-fixed z-[-3]"></div>
     
-    <!-- Dark Blur Overlay for readability (lightened to make background brighter) -->
-    <div id="bg-overlay" class="fixed inset-0 bg-zinc-950/40 z-[-1]"></div>
+    <!-- Dark Blur Overlay for Readability -->
+    <div id="bg-overlay" class="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-[-2]"></div>
 
-    <!-- Main Content Container -->
-    <main class="relative z-10 min-h-[100dvh] w-full flex justify-center p-4 sm:p-8 overflow-y-auto">
+    <!-- Main Layout Wrapper -->
+    <div class="relative w-full max-w-5xl z-10 flex flex-col md:flex-row gap-5 h-[85vh] md:h-[78vh]">
         
-        <!-- my-auto ensures it centers vertically unless content is too tall, then it scrolls naturally -->
-        <div class="w-full max-w-md my-auto">
-            
-            <!-- PORTAL VIEW -->
-            <div id="portalView" class="view active glass-card portal-card rounded-3xl p-6 sm:p-10 flex-col items-center text-center transition-transform duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] hover:-translate-y-1">
-                
-                <!-- Profile Header -->
-                <div class="relative mb-6 flex justify-center w-full transition-transform duration-500 hover:scale-105 hover:rotate-2" id="avatarFrame" style="display: none;">
-                    <img id="profileImg" src="" alt="Profile Picture" class="w-24 h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-                </div>
-
-                <h1 id="portalName" class="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 whitespace-nowrap">
-                    CAB GCU
-                </h1>
-                
-                <p id="portalBio" class="text-white mb-6 font-medium text-sm px-2 sm:px-4 whitespace-pre-wrap leading-relaxed"></p>
-
-                <a href="#" id="portalHandle" class="inline-block px-5 py-1.5 mb-8 rounded-full bg-purple-500/10 border border-purple-500/30 text-xs font-bold text-purple-300 hover:text-white hover:bg-purple-500/30 hover:border-purple-500/50 transition-all duration-300 tracking-wider uppercase hover:shadow-[0_0_15px_rgba(168,85,247,0.4)]" style="display: none;"></a>
-
-                <!-- Links Container -->
-                <div id="linksContainer" class="w-full flex flex-col gap-3"></div>
-                
-                <!-- Footer -->
-                <footer class="mt-10 text-zinc-500 text-[9px] sm:text-[10px] tracking-wide flex flex-col items-center gap-2 w-full">
-                    <div class="flex items-center justify-center w-full">
-                        <span class="whitespace-nowrap">© <span id="year"></span> Canyon Activities Board</span>
-                    </div>
-                    <span class="opacity-60 text-[8px] sm:text-[9px] cursor-pointer hover:opacity-100 hover:text-purple-400 transition-all duration-300 uppercase tracking-widest mt-2 whitespace-nowrap" onclick="checkAuthAndShowAdmin()">Admin Access</span>
-                </footer>
-            </div>
-
-            <!-- ADMIN VIEW -->
-            <div id="adminView" class="view glass-card rounded-3xl p-6 sm:p-10 flex-col border-zinc-800">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-2xl font-bold tracking-tight text-white">Portal Settings</h2>
-                    <div class="flex gap-2">
-                        <button class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg font-medium" onclick="adminLogout()">
-                            <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
-                        </button>
-                        <button class="bg-gradient-to-r from-blue-600 to-purple-600 border border-purple-500/50 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] shadow-sm" onclick="switchView('portal')">
-                            Close
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Analytics Dashboard -->
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-lg cursor-default">
-                        <i data-lucide="eye" class="w-6 h-6 text-purple-400 mb-2"></i>
-                        <span class="text-2xl font-bold text-white" id="adminTotalViews">0</span>
-                        <span class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest mt-1 text-center">Page Views</span>
-                    </div>
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-lg cursor-default">
-                        <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-blue-400 mb-2"></i>
-                        <span class="text-2xl font-bold text-white" id="adminTotalClicks">0</span>
-                        <span class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest mt-1 text-center">Total Clicks</span>
-                    </div>
-                </div>
-                
-                <!-- Branding -->
-                <div class="mb-8 border-b border-zinc-800 pb-8">
-                    <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Branding & Profile</label>
-                    <input type="text" id="setProfileName" class="control-input" placeholder="Display Name">
-                    <input type="text" id="setSocialHandle" class="control-input" placeholder="Instagram Handle (e.g. @cabgcu)">
-                    <textarea id="setProfileBio" class="control-input resize-y min-h-[80px]" placeholder="Bio..."></textarea>
-                    <input type="text" id="setAvatarUrl" class="control-input !mb-0" placeholder="Avatar Image URL">
-                </div>
-                
-                <!-- Backgrounds -->
-                <div class="mb-8 border-b border-zinc-800 pb-8">
-                    <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Manage Backgrounds</label>
-                    <div id="bg-list-manager" class="flex flex-col gap-2 mb-4 max-h-[200px] overflow-y-auto pr-1"></div>
-                    
-                    <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 border-dashed transition-all duration-300 hover:border-zinc-600">
-                        <input type="file" id="bgUploadInput" accept="image/*" class="w-full text-sm text-zinc-400 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-all cursor-pointer">
-                        <button class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" onclick="uploadBackground()" id="uploadBgBtn">
-                            <i data-lucide="upload-cloud" class="w-4 h-4 text-purple-400"></i> Upload to Supabase 
-                            <div class="loader" id="uploadBgLoader"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Links -->
-                <div class="mb-8 border-b border-zinc-800 pb-8">
-                    <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Manage Links</label>
-                    <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[250px] overflow-y-auto pr-1"></div>
-                    
-                    <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 border-dashed flex flex-col gap-3 transition-all duration-300 hover:border-zinc-600">
-                        <div class="flex gap-2">
-                            <input type="text" id="newLinkIcon" class="control-input !mb-0 w-16 text-center text-lg" placeholder="🔗">
-                            <input type="text" id="newLinkTitle" class="control-input !mb-0 flex-1" placeholder="Link Title">
-                        </div>
-                        <input type="text" id="newLinkUrl" class="control-input !mb-0" placeholder="https://...">
-                        <button class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" onclick="addLinkUI()">
-                            <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Link
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Security -->
-                <div class="mb-8">
-                    <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Security</label>
-                    <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep)">
-                </div>
-                
-                <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-500/50" id="saveBtn" onclick="saveAdminSettings()">
-                    Save All Changes <div class="loader" id="saveLoader"></div>
-                </button>
+        <!-- Left Side: Image Card (Contains Supabase Backgrounds) -->
+        <div class="hidden md:block md:w-1/2 h-full glass-card rounded-2xl overflow-hidden relative shadow-2xl transition-transform duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.1)]">
+            <div id="bg-container">
+                <!-- Fallback before DB loads -->
+                <div class="bg-slide active" style="background-image: url('https://i.imgur.com/y4wt546.jpeg')"></div>
             </div>
         </div>
-    </main>
+
+        <!-- Right Side: Portal & Admin Container -->
+        <div class="w-full md:w-1/2 flex flex-col relative h-full glass-card rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.1)]">
+
+            <!-- Header / Settings Button -->
+            <div class="absolute top-6 right-6 z-20">
+                <button type="button" onclick="checkAuthAndShowAdmin()" class="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300 focus:outline-none hover:scale-105" title="Admin Access">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 sm:p-10 flex flex-col w-full">
+                
+                <!-- PORTAL VIEW -->
+                <div id="portalView" class="view active flex-col items-center text-center my-auto w-full max-w-[340px] mx-auto">
+                    
+                    <!-- Profile Header / Logo -->
+                    <div class="relative mb-6 flex justify-center w-full transition-transform duration-500 hover:scale-105" id="avatarFrame">
+                        <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Profile Picture" class="h-16 sm:h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                    </div>
+
+                    <h1 id="portalName" class="text-[32px] sm:text-[36px] font-extrabold mb-2 text-white tracking-tight leading-tight">
+                        CAB GCU
+                    </h1>
+                    
+                    <p id="portalBio" class="text-zinc-400 mb-6 font-medium text-sm px-2 whitespace-pre-wrap leading-relaxed"></p>
+
+                    <a href="#" id="portalHandle" class="inline-block px-5 py-1.5 mb-8 rounded-full bg-purple-500/10 border border-purple-500/30 text-[11px] font-bold text-purple-400 hover:text-white hover:bg-purple-500/30 hover:border-purple-500/50 transition-all duration-300 tracking-[0.1em] uppercase hover:shadow-[0_0_15px_rgba(168,85,247,0.4)]" style="display: none;"></a>
+
+                    <!-- Links Container -->
+                    <div id="linksContainer" class="w-full flex flex-col gap-3"></div>
+                    
+                    <!-- Footer -->
+                    <footer class="mt-10 text-zinc-500 text-[10px] tracking-wide w-full flex justify-center items-center">
+                        <p class="whitespace-nowrap">© <span id="year"></span> Canyon Activities Board</p>
+                    </footer>
+                </div>
+
+                <!-- ADMIN VIEW -->
+                <div id="adminView" class="view flex-col w-full max-w-[400px] mx-auto my-auto py-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-bold tracking-tight text-white">Portal Settings</h2>
+                        <div class="flex gap-2">
+                            <button class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg font-medium" onclick="adminLogout()">
+                                <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
+                            </button>
+                            <button class="bg-gradient-to-r from-blue-600 to-purple-600 border border-purple-500/50 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] shadow-sm" onclick="switchView('portal')">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Dashboard -->
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-lg cursor-default">
+                            <i data-lucide="eye" class="w-6 h-6 text-purple-400 mb-2"></i>
+                            <span class="text-2xl font-bold text-white" id="adminTotalViews">0</span>
+                            <span class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest mt-1 text-center">Page Views</span>
+                        </div>
+                        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-lg cursor-default">
+                            <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-blue-400 mb-2"></i>
+                            <span class="text-2xl font-bold text-white" id="adminTotalClicks">0</span>
+                            <span class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest mt-1 text-center">Total Clicks</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Branding -->
+                    <div class="mb-8 border-b border-zinc-800 pb-8">
+                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Branding & Profile</label>
+                        <input type="text" id="setProfileName" class="control-input" placeholder="Display Name">
+                        <input type="text" id="setSocialHandle" class="control-input" placeholder="Instagram Handle (e.g. @cabgcu)">
+                        <textarea id="setProfileBio" class="control-input resize-y min-h-[80px]" placeholder="Bio..."></textarea>
+                        <input type="text" id="setAvatarUrl" class="control-input !mb-0" placeholder="Avatar Logo URL">
+                    </div>
+                    
+                    <!-- Backgrounds -->
+                    <div class="mb-8 border-b border-zinc-800 pb-8">
+                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Manage Backgrounds</label>
+                        <div id="bg-list-manager" class="flex flex-col gap-2 mb-4 max-h-[200px] overflow-y-auto pr-1"></div>
+                        
+                        <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 border-dashed transition-all duration-300 hover:border-zinc-600">
+                            <input type="file" id="bgUploadInput" accept="image/*" class="w-full text-sm text-zinc-400 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-all cursor-pointer">
+                            <button class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" onclick="uploadBackground()" id="uploadBgBtn">
+                                <i data-lucide="upload-cloud" class="w-4 h-4 text-purple-400"></i> Upload to Supabase 
+                                <div class="loader" id="uploadBgLoader"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Links -->
+                    <div class="mb-8 border-b border-zinc-800 pb-8">
+                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Manage Links</label>
+                        <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[250px] overflow-y-auto pr-1"></div>
+                        
+                        <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 border-dashed flex flex-col gap-3 transition-all duration-300 hover:border-zinc-600">
+                            <div class="flex gap-2">
+                                <input type="text" id="newLinkIcon" class="control-input !mb-0 w-16 text-center text-lg" placeholder="🔗">
+                                <input type="text" id="newLinkTitle" class="control-input !mb-0 flex-1" placeholder="Link Title">
+                            </div>
+                            <input type="text" id="newLinkUrl" class="control-input !mb-0" placeholder="https://...">
+                            <button class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" onclick="addLinkUI()">
+                                <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Link
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="mb-8">
+                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Security</label>
+                        <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep)">
+                    </div>
+                    
+                    <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-500/50" id="saveBtn" onclick="saveAdminSettings()">
+                        Save All Changes <div class="loader" id="saveLoader"></div>
+                    </button>
+                </div>
+            </div>
+        </div> <!-- End Right Side Form Card -->
+    </div> <!-- End Main Layout Wrapper -->
 
     <!-- Admin Login Modal -->
     <div id="gateModal" class="fixed inset-0 z-[1000]" style="display: none;">
@@ -261,7 +264,7 @@
         <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-md" onclick="hideGate()"></div>
         <!-- Modal Content -->
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl border-purple-500/30">
-            <div class="w-20 h-20 bg-zinc-900 rounded-2xl p-2 mb-6 flex items-center justify-center border border-zinc-800">
+            <div class="w-20 h-20 bg-zinc-900 rounded-2xl p-3 mb-6 flex items-center justify-center border border-zinc-800">
                 <img id="adminGateImg" src="https://i.imgur.com/p2qZOL5.png" alt="CAB" class="w-full h-full object-contain rounded-xl">
             </div>
             <h3 class="text-2xl font-bold mb-1 text-white">Admin Access</h3>
@@ -355,22 +358,24 @@
             
             const avatarFrame = document.getElementById('avatarFrame');
             const adminGateImg = document.getElementById('adminGateImg');
+            const profileImg = document.getElementById('profileImg');
             
             if (state.config.avatarUrl) {
-                document.getElementById('profileImg').src = state.config.avatarUrl;
+                profileImg.src = state.config.avatarUrl;
                 adminGateImg.src = state.config.avatarUrl;
                 avatarFrame.style.display = 'flex';
             } else { 
-                avatarFrame.style.display = 'none'; 
+                profileImg.src = "https://i.imgur.com/p2qZOL5.png";
                 adminGateImg.src = "https://i.imgur.com/p2qZOL5.png";
+                avatarFrame.style.display = 'flex';
             }
 
             // Generate glass buttons for links
             document.getElementById('linksContainer').innerHTML = state.config.links.map((link, i) => `
-                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="glass-button w-full py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl relative flex items-center justify-center group overflow-hidden">
-                    <span class="absolute left-4 sm:left-6 text-lg sm:text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">${escapeHTML(link.icon) || '🔗'}</span>
-                    <span class="font-bold text-sm sm:text-base tracking-wide text-zinc-200 group-hover:text-white transition-colors text-center px-10 w-full block whitespace-nowrap">${escapeHTML(link.title)}</span>
-                    <i data-lucide="chevron-right" class="absolute right-4 sm:right-6 w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 group-hover:text-purple-400 transition-colors flex-shrink-0 group-hover:translate-x-1 duration-300"></i>
+                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="glass-button w-full py-3.5 sm:py-4 px-6 rounded-xl relative flex items-center justify-center group overflow-hidden shadow-sm">
+                    <span class="absolute left-6 text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">${escapeHTML(link.icon) || '🔗'}</span>
+                    <span class="font-bold text-[13px] tracking-[0.05em] text-zinc-200 group-hover:text-white transition-colors text-center px-10 w-full block whitespace-nowrap uppercase">${escapeHTML(link.title)}</span>
+                    <i data-lucide="chevron-right" class="absolute right-6 w-5 h-5 text-zinc-500 group-hover:text-purple-400 transition-colors flex-shrink-0 group-hover:translate-x-1 duration-300"></i>
                 </a>
             `).join('');
             
@@ -560,8 +565,9 @@
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(v + 'View').classList.add('active');
             if(v === 'admin') loadAdminValues();
-            // Scroll to top of main container smoothly
-            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Scroll to top when switching views
+            document.querySelector('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         async function checkAuthAndShowAdmin() {
@@ -649,10 +655,12 @@
 
         function initBackgroundRotation() {
             const container = document.getElementById('bg-container');
+            if (!container) return; // Prevent JS error if container was removed from DOM
+
             if (state.bgRotationInterval) clearInterval(state.bgRotationInterval);
 
             if (!state.bgImages || state.bgImages.length === 0) {
-                container.innerHTML = '';
+                // Keep the default static background logic (don't clear it) if no DB images exist
                 return;
             }
 
@@ -661,7 +669,7 @@
             if(state.bgImages.length > 1) {
                 state.bgIndex = 0;
                 state.bgRotationInterval = setInterval(() => {
-                    const slides = document.querySelectorAll('.bg-slide');
+                    const slides = container.querySelectorAll('.bg-slide');
                     if (slides.length > 1) {
                         slides[state.bgIndex].classList.remove('active');
                         state.bgIndex = (state.bgIndex + 1) % slides.length;
