@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>CAB Portal</title>
+    <title>CAB Portal - Night Glass</title>
     
-    <!-- Supabase -->
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- GSAP for Smooth Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -24,11 +27,12 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        zinc: {
-                            900: '#18181b',
-                            950: '#09090b',
+                        night: {
+                            950: '#020617',
+                            900: '#0f172a',
+                            800: '#1e293b'
                         }
                     }
                 }
@@ -39,260 +43,448 @@
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #71717a; }
+        body {
+            font-family: "Inter", sans-serif;
+            background: #020617;
+        }
 
-        /* Security Input */
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,0.6); }
+
+        /* Security Input Masking */
         .no-save-pass { -webkit-text-security: disc !important; text-security: disc !important; }
 
-        /* Dark Theme Cards */
-        .glass-card {
-            background: rgba(9, 9, 11, 0.65);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        }
-        
-        .glass-button {
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .glass-button:hover {
-            background: rgba(24, 24, 27, 0.5);
-            border: 1px solid rgba(168, 85, 247, 0.4);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.25);
+        /* NIGHT GLASS VIDEO BACKGROUND */
+        .night-bg {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -2;
+            background-color: #020617;
         }
 
-        /* View Switching Logic */
+        /* Vignette effect */
+        .night-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, #020617 150%);
+            opacity: 0.9;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* NIGHT GLASS CARDS */
+        .night-glass-card {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.65), 0 0 80px rgba(124, 58, 237, 0.25);
+        }
+
+        .night-glass-card-subtle {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(167, 139, 250, 0.25);
+        }
+
+        /* LOGO RADIAL GLOW & FLOAT EFFECT */
+        .logo-box {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo-box::before {
+            content: "";
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.85), rgba(99, 102, 241, 0.65), rgba(37, 99, 235, 0.4), transparent 75%);
+            filter: blur(28px);
+            animation: logoGlowPulse 4s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes logoGlowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.22); opacity: 1; }
+        }
+
+        /* NIGHT GLASS BUTTONS */
+        .night-btn-primary {
+            background: linear-gradient(135deg, #a855f7, #6366f1, #2563eb);
+            color: white;
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.45);
+            transition: all 0.3s ease;
+        }
+
+        .night-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 45px rgba(99, 102, 241, 0.65);
+        }
+
+        .night-btn-link {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .night-btn-link:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(168, 85, 247, 0.7);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.35);
+        }
+
+        /* INPUT STYLES */
+        .control-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(167, 139, 250, 0.45);
+            color: #ffffff;
+            border-radius: 1rem;
+            padding: 0.85rem 1.1rem;
+            margin-bottom: 0.85rem;
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 0.925rem;
+        }
+
+        .control-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+
+        .control-input:focus {
+            border-color: #60a5fa;
+            background: rgba(15, 23, 42, 0.85);
+            box-shadow: 0 0 25px rgba(96, 165, 250, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        select.control-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        
+        select.control-input option {
+            background-color: #0f172a;
+            color: #fff;
+        }
+
+        /* VIEW SWITCHING LOGIC */
         .view { display: none; opacity: 0; transform: translateY(15px); transition: 0.4s ease; }
         .view.active { display: flex; opacity: 1; transform: translateY(0); }
 
-        /* Overlays & Loaders */
-        #loading-overlay {
-            position: fixed; inset: 0; z-index: 9999; background: #09090b;
-            display: flex; align-items: center; justify-content: center; pointer-events: none;
-        }
-        .loading-logo { width: 90px; height: 90px; animation: smooth-spin 1.2s linear infinite; opacity: 0.8; }
-        .loader { display: none; width: 16px; height: 16px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 1s linear infinite; }
+        /* LOADERS & OVERLAYS */
+        .loader { display: none; width: 18px; height: 18px; border: 2.5px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 0.8s linear infinite; }
         
         @keyframes smooth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Dynamic Backgrounds (Now contained in the Left Card) */
-        #bg-container { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; background: #151518; }
+        /* Dynamic Background Slides inside Left Container */
+        #bg-container { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; background: #020617; }
         .bg-slide { position: absolute; inset: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 2s ease-in-out; }
         .bg-slide.active { opacity: 0.9; }
-
-        /* Admin Input styling */
-        .control-input {
-            width: 100%; 
-            background: #18181b; 
-            border: 1px solid #27272a; 
-            color: #ffffff; 
-            border-radius: 0.75rem; 
-            padding: 0.8rem 1rem; 
-            margin-bottom: 0.75rem; 
-            outline: none; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .control-input::placeholder { color: rgba(255, 255, 255, 0.3); }
-        .control-input:focus { 
-            border-color: #a855f7; 
-            background: #27272a; 
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.15); 
-            transform: translateY(-2px);
-        }
-        .control-input:hover:not(:focus) {
-            border-color: rgba(168, 85, 247, 0.4);
-            transform: translateY(-1px);
-        }
     </style>
 </head>
-<body class="text-zinc-100 min-h-[100dvh] relative overflow-x-hidden selection:bg-purple-500/30 font-sans bg-black flex items-center justify-center p-4 sm:p-8 antialiased">
+<body class="text-white min-h-[100dvh] w-full relative overflow-x-hidden selection:bg-purple-500/30 font-sans flex items-start md:items-center justify-center p-4 sm:p-8 antialiased custom-scroll">
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay"><img src="https://i.imgur.com/p2qZOL5.png" alt="Logo" class="loading-logo"></div>
+    <!-- Fullscreen Video Background -->
+    <video id="bgVideo" class="night-bg" autoplay loop muted playsinline>
+        <source id="bgVideoSource" src="https://i.imgur.com/qY8V0Ou.mp4" type="video/mp4">
+    </video>
+    <div class="night-overlay"></div>
 
-    <!-- Page Background Image -->
-    <div class="fixed inset-0 bg-[url('https://i.imgur.com/4DfFmUh.png')] bg-cover bg-center bg-no-repeat bg-fixed z-[-3]"></div>
-    
-    <!-- Dark Overlay for Readability (Lightened and Unblurred) -->
-    <div id="bg-overlay" class="fixed inset-0 bg-zinc-950/20 z-[-2]"></div>
-
-    <!-- Main Layout Wrapper -->
-    <div class="relative w-full max-w-5xl z-10 flex flex-col md:flex-row gap-5 h-[85vh] md:h-[78vh]">
+    <!-- Main App Wrapper -->
+    <div class="relative w-full max-w-5xl z-10 flex flex-col md:flex-row gap-8 md:gap-10 h-auto md:h-[82vh] py-4 md:py-0">
         
-        <!-- Left Side: Image Card (Contains Supabase Backgrounds) -->
-        <div class="hidden md:block md:w-1/2 h-full glass-card rounded-2xl overflow-hidden relative shadow-2xl transition-transform duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.1)]">
-            <div id="bg-container">
-                <!-- Fallback before DB loads -->
-                <div class="bg-slide active" style="background-image: url('https://i.imgur.com/y4wt546.jpeg')"></div>
+        <!-- LEFT SIDE: Interactive Card Stack -->
+        <div class="flex w-full md:w-1/2 h-[55vh] md:h-full relative order-2 md:order-1">
+            <div id="card-stack" class="relative w-full h-full">
+                <!-- Stack Cards Injected via JS -->
             </div>
         </div>
 
-        <!-- Right Side: Portal & Admin Container -->
-        <div class="w-full md:w-1/2 flex flex-col relative h-full glass-card rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.1)]">
+        <!-- RIGHT SIDE: Main Night Glass Interface Card -->
+        <div class="w-full md:w-1/2 flex flex-col relative h-[75vh] md:h-full night-glass-card rounded-[36px] overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-[0_0_60px_rgba(124,58,237,0.3)] order-1 md:order-2">
 
-            <!-- Header / Settings Button -->
-            <div class="absolute top-6 right-6 z-20">
-                <button type="button" onclick="checkAuthAndShowAdmin()" class="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300 focus:outline-none hover:scale-105" title="Admin Access">
+            <!-- Top Left Info Button -->
+            <div class="absolute top-6 left-6 z-30">
+                <button type="button" onclick="showAbout()" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-900/50 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-600/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" title="About CAB">
+                    <i data-lucide="info" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Top Right Settings Button -->
+            <div class="absolute top-6 right-6 z-30">
+                <button type="button" onclick="checkAuthAndShowAdmin()" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-900/50 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-600/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" title="Admin Settings">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
 
-            <!-- Scrollable Content Area -->
-            <div class="flex-1 overflow-y-auto p-6 sm:p-10 flex flex-col w-full">
+            <!-- Scrollable Inner Canvas -->
+            <div class="flex-1 overflow-y-auto p-6 sm:p-10 flex flex-col w-full custom-scroll">
                 
                 <!-- PORTAL VIEW -->
-                <div id="portalView" class="view active flex-col items-center text-center my-auto w-full max-w-[340px] mx-auto">
-                    
-                    <!-- Profile Header / Logo -->
-                    <div class="relative mb-6 flex justify-center w-full transition-transform duration-500 hover:scale-105" id="avatarFrame">
-                        <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Profile Picture" class="h-16 sm:h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                <div id="portalView" class="view active flex-col items-center text-center my-auto w-full max-w-[360px] mx-auto">
+                    <div class="logo-box mb-6">
+                        <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Profile" class="card-logo w-20 h-20 object-contain relative z-10 drop-shadow-[0_15px_30px_rgba(0,0,0,0.8)]">
                     </div>
 
-                    <h1 id="portalName" class="text-[32px] sm:text-[36px] font-extrabold mb-2 text-white tracking-tight leading-tight">
-                        CAB GCU
-                    </h1>
-                    
-                    <p id="portalBio" class="text-zinc-400 mb-6 font-medium text-sm px-2 whitespace-pre-wrap leading-relaxed"></p>
+                    <h1 id="portalName" class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 drop-shadow-md">CAB GCU</h1>
+                    <p id="portalBio" class="text-purple-200/80 mb-5 font-medium text-sm px-2 whitespace-pre-wrap leading-relaxed">Grand Canyon University's Student Activity Hub</p>
 
-                    <a href="#" id="portalHandle" class="inline-block px-5 py-1.5 mb-8 rounded-full bg-purple-500/10 border border-purple-500/30 text-[11px] font-bold text-purple-400 hover:text-white hover:bg-purple-500/30 hover:border-purple-500/50 transition-all duration-300 tracking-[0.1em] uppercase hover:shadow-[0_0_15px_rgba(168,85,247,0.4)]" style="display: none;"></a>
+                    <a href="#" id="portalHandle" class="inline-block px-5 py-1.5 mb-7 rounded-full bg-purple-500/15 border border-purple-400/40 text-xs font-bold text-purple-300 hover:text-white hover:bg-purple-500/30 transition-all duration-300 tracking-wider uppercase hover:shadow-[0_0_20px_rgba(168,85,247,0.5)]" style="display: none;">@cabgcu</a>
 
-                    <!-- Links Container -->
-                    <div id="linksContainer" class="w-full flex flex-col gap-3"></div>
+                    <div id="linksContainer" class="w-full flex flex-col gap-3.5"></div>
                     
-                    <!-- Footer -->
-                    <footer class="mt-10 text-zinc-500 text-[10px] tracking-wide w-full flex justify-center items-center">
+                    <footer class="mt-10 text-purple-300/50 text-[11px] tracking-wide w-full flex justify-center items-center">
                         <p class="whitespace-nowrap">© <span id="year"></span> Canyon Activities Board</p>
                     </footer>
                 </div>
 
                 <!-- ADMIN VIEW -->
-                <div id="adminView" class="view flex-col w-full max-w-[400px] mx-auto my-auto py-8">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-2xl font-bold tracking-tight text-white">Portal Settings</h2>
+                <div id="adminView" class="view flex-col w-full max-w-[400px] mx-auto my-auto py-6">
+                    <div class="flex justify-between items-center mb-8 border-b border-purple-500/20 pb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-5 h-5 text-purple-400"></i> Portal Settings
+                        </h2>
                         <div class="flex gap-2">
-                            <button class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg font-medium" onclick="adminLogout()">
-                                <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
+                            <button class="night-btn-link text-purple-200 hover:text-white px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 font-semibold" onclick="adminLogout()">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-purple-400"></i> Lock
                             </button>
-                            <button class="bg-gradient-to-r from-blue-600 to-purple-600 border border-purple-500/50 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] shadow-sm" onclick="switchView('portal')">
+                            <button class="night-btn-primary px-3 py-2 rounded-xl text-xs font-bold" onclick="switchView('portal')">
                                 Close
                             </button>
                         </div>
                     </div>
 
-                    <!-- Analytics Dashboard -->
-                    <div class="grid grid-cols-2 gap-4 mb-8">
-                        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-lg cursor-default">
-                            <i data-lucide="eye" class="w-6 h-6 text-purple-400 mb-2"></i>
-                            <span class="text-2xl font-bold text-white" id="adminTotalViews">0</span>
-                            <span class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest mt-1 text-center">Page Views</span>
+                    <div class="grid grid-cols-2 gap-3.5 mb-8">
+                        <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-purple-400/50">
+                            <i data-lucide="eye" class="w-6 h-6 text-purple-400 mb-1.5"></i>
+                            <span class="text-2xl font-extrabold text-white" id="adminTotalViews">0</span>
+                            <span class="text-[10px] text-purple-300/70 uppercase tracking-widest mt-1">Page Views</span>
                         </div>
-                        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-lg cursor-default">
-                            <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-blue-400 mb-2"></i>
-                            <span class="text-2xl font-bold text-white" id="adminTotalClicks">0</span>
-                            <span class="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-widest mt-1 text-center">Total Clicks</span>
+                        <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/50">
+                            <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-indigo-400 mb-1.5"></i>
+                            <span class="text-2xl font-extrabold text-white" id="adminTotalClicks">0</span>
+                            <span class="text-[10px] text-purple-300/70 uppercase tracking-widest mt-1">Total Clicks</span>
                         </div>
                     </div>
                     
-                    <!-- Branding -->
-                    <div class="mb-8 border-b border-zinc-800 pb-8">
-                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Branding & Profile</label>
+                    <!-- Branding Settings -->
+                    <div class="mb-8 border-b border-purple-500/20 pb-8">
+                        <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="user" class="w-3.5 h-3.5"></i> Branding & Profile
+                        </label>
                         <input type="text" id="setProfileName" class="control-input" placeholder="Display Name">
                         <input type="text" id="setSocialHandle" class="control-input" placeholder="Instagram Handle (e.g. @cabgcu)">
-                        <textarea id="setProfileBio" class="control-input resize-y min-h-[80px]" placeholder="Bio..."></textarea>
-                        <input type="text" id="setAvatarUrl" class="control-input !mb-0" placeholder="Avatar Logo URL">
+                        <textarea id="setProfileBio" class="control-input min-h-[85px] resize-y" placeholder="Portal Bio..."></textarea>
+                        <input type="text" id="setAvatarUrl" class="control-input !mb-0" placeholder="Avatar Logo Image URL">
                     </div>
-                    
-                    <!-- Backgrounds -->
-                    <div class="mb-8 border-b border-zinc-800 pb-8">
-                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Manage Backgrounds</label>
-                        <div id="bg-list-manager" class="flex flex-col gap-2 mb-4 max-h-[200px] overflow-y-auto pr-1"></div>
-                        
-                        <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 border-dashed transition-all duration-300 hover:border-zinc-600">
-                            <input type="file" id="bgUploadInput" accept="image/*" class="w-full text-sm text-zinc-400 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-all cursor-pointer">
-                            <button class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" onclick="uploadBackground()" id="uploadBgBtn">
-                                <i data-lucide="upload-cloud" class="w-4 h-4 text-purple-400"></i> Upload to Supabase 
-                                <div class="loader" id="uploadBgLoader"></div>
+
+                    <!-- Background Video Management -->
+                    <div class="mb-8 border-b border-purple-500/20 pb-8">
+                        <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="video" class="w-3.5 h-3.5"></i> Background Video
+                        </label>
+                        <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30">
+                            <input type="file" id="videoUploadInput" accept="video/mp4,video/webm" class="w-full text-xs text-purple-200/70 mb-3 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600/30 file:text-purple-200 hover:file:bg-purple-600/50 transition cursor-pointer">
+                            <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2" onclick="uploadBackgroundVideo()" id="uploadVideoBtn">
+                                <i data-lucide="upload-cloud" class="w-4 h-4 text-purple-400"></i> Upload New Video to Storage 
+                                <div class="loader" id="uploadVideoLoader"></div>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Links -->
-                    <div class="mb-8 border-b border-zinc-800 pb-8">
-                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Manage Links</label>
-                        <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[250px] overflow-y-auto pr-1"></div>
+                    <!-- Stack Cards Management -->
+                    <div class="mb-8 border-b border-purple-500/20 pb-8">
+                        <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i> Stack Cards
+                        </label>
+                        <div id="stack-list-manager" class="flex flex-col gap-2 mb-4 max-h-[190px] overflow-y-auto pr-1"></div>
                         
-                        <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 border-dashed flex flex-col gap-3 transition-all duration-300 hover:border-zinc-600">
+                        <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30 flex flex-col gap-3">
+                            <div class="text-xs text-purple-300 font-bold mb-1">Add New Card</div>
+                            <input type="file" id="newCardImgUpload" accept="image/*" class="w-full text-xs text-purple-200/70 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600/30 file:text-purple-200 hover:file:bg-purple-600/50 transition cursor-pointer">
+                            <input type="text" id="newCardTitle" class="control-input !mb-0" placeholder="Card Title (e.g. Upcoming Events)">
+                            <textarea id="newCardDesc" class="control-input min-h-[60px] resize-y !mb-0" placeholder="Short Description..."></textarea>
+                            <div class="flex gap-2">
+                                <input type="text" id="newCardTag" class="control-input !mb-0 flex-1" placeholder="Badge Tag (e.g. Campus Life)">
+                                <select id="newCardAction" class="control-input !mb-0 flex-1">
+                                    <option value="none">No Button</option>
+                                    <option value="about">Brochure Button</option>
+                                    <option value="events">Events Button</option>
+                                </select>
+                            </div>
+                            
+                            <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2 mt-1" onclick="addStackCardUI()" id="addCardBtn">
+                                <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Upload & Add Card
+                                <div class="loader" id="addCardLoader"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Link Manager -->
+                    <div class="mb-8 border-b border-purple-500/20 pb-8">
+                        <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="link" class="w-3.5 h-3.5"></i> Manage Links
+                        </label>
+                        <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[220px] overflow-y-auto pr-1"></div>
+                        
+                        <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30 flex flex-col gap-3">
                             <div class="flex gap-2">
                                 <input type="text" id="newLinkIcon" class="control-input !mb-0 w-16 text-center text-lg" placeholder="🔗">
                                 <input type="text" id="newLinkTitle" class="control-input !mb-0 flex-1" placeholder="Link Title">
                             </div>
                             <input type="text" id="newLinkUrl" class="control-input !mb-0" placeholder="https://...">
-                            <button class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white py-2.5 rounded-xl text-sm font-medium flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg" onclick="addLinkUI()">
-                                <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Link
+                            <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2" onclick="addLinkUI()">
+                                <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Link Button
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Event Manager -->
+                    <div class="mb-8 border-b border-purple-500/20 pb-8">
+                        <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Manage Events
+                        </label>
+                        <div id="event-list-manager" class="flex flex-col gap-2 mb-4 max-h-[220px] overflow-y-auto pr-1"></div>
+                        
+                        <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30 flex flex-col gap-3">
+                            <input type="text" id="newEventTitle" class="control-input !mb-0" placeholder="Event Title">
+                            <input type="date" id="newEventDate" class="control-input !mb-0 w-full" style="color-scheme: dark;">
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <div class="flex-1">
+                                    <label class="text-[10px] text-purple-300/70 font-bold uppercase pl-1 mb-1 block">Start Time</label>
+                                    <input type="time" id="newEventStartTime" class="control-input !mb-0 w-full" style="color-scheme: dark;">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="text-[10px] text-purple-300/70 font-bold uppercase pl-1 mb-1 block">End Time</label>
+                                    <input type="time" id="newEventEndTime" class="control-input !mb-0 w-full" style="color-scheme: dark;">
+                                </div>
+                            </div>
+                            <input type="text" id="newEventLocation" class="control-input !mb-0 mt-1" placeholder="Location">
+                            <textarea id="newEventDesc" class="control-input min-h-[60px] resize-y !mb-0" placeholder="Short Description..."></textarea>
+                            
+                            <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2 mt-1" onclick="addEventUI()">
+                                <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Event
                             </button>
                         </div>
                     </div>
 
                     <!-- Security -->
                     <div class="mb-8">
-                        <label class="block mb-4 text-purple-400 text-xs font-bold uppercase tracking-wider">Security</label>
-                        <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep)">
+                        <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Security Settings
+                        </label>
+                        <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep current)">
                     </div>
                     
-                    <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] border border-purple-500/50" id="saveBtn" onclick="saveAdminSettings()">
+                    <button class="w-full night-btn-primary font-bold py-4 rounded-2xl flex justify-center items-center gap-2 text-sm tracking-wide uppercase" id="saveBtn" onclick="saveAdminSettings()">
                         Save All Changes <div class="loader" id="saveLoader"></div>
                     </button>
                 </div>
             </div>
-        </div> <!-- End Right Side Form Card -->
-    </div> <!-- End Main Layout Wrapper -->
+        </div>
+    </div>
 
     <!-- Admin Login Modal -->
-    <div id="gateModal" class="fixed inset-0 z-[1000]" style="display: none;">
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-md" onclick="hideGate()"></div>
-        <!-- Modal Content -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl border-purple-500/30">
-            <div class="w-20 h-20 bg-zinc-900 rounded-2xl p-3 mb-6 flex items-center justify-center border border-zinc-800">
-                <img id="adminGateImg" src="https://i.imgur.com/p2qZOL5.png" alt="CAB" class="w-full h-full object-contain rounded-xl">
+    <div id="gateModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="display: none;">
+        <div id="gateBackdrop" class="absolute inset-0 bg-black/75 backdrop-blur-md" onclick="hideGate()"></div>
+        
+        <div id="gateCard" class="relative w-full max-w-sm night-glass-card rounded-[32px] p-8 flex flex-col items-center text-center shadow-2xl border-purple-400/40 z-10">
+            <div class="logo-box mb-5">
+                <img id="adminGateImg" src="https://i.imgur.com/p2qZOL5.png" alt="Admin Gate" class="w-16 h-16 object-contain relative z-10 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
             </div>
-            <h3 class="text-2xl font-bold mb-1 text-white">Admin Access</h3>
-            <p class="text-zinc-400 text-sm mb-8">Enter your credentials to continue</p>
+            <h3 class="text-2xl font-bold mb-1 text-white tracking-tight">Admin Access</h3>
+            <p class="text-purple-200/70 text-xs mb-6">Authenticate to access portal controls</p>
             
             <input type="email" id="adminEmail" class="control-input text-center" placeholder="Admin Email">
             <input type="password" id="adminPass" class="control-input text-center mb-6" placeholder="Password" onkeyup="if(event.key==='Enter') verifyAdmin()">
             
-            <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 border border-purple-500/50 text-white font-bold py-3.5 rounded-xl flex justify-center items-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.6)]" id="gateBtn" onclick="verifyAdmin()">
-                Authorize <div class="loader" id="gateLoader"></div>
+            <button class="w-full night-btn-primary font-bold py-3.5 rounded-2xl flex justify-center items-center gap-2 text-sm" id="gateBtn" onclick="verifyAdmin()">
+                Authorize Access <div class="loader" id="gateLoader"></div>
             </button>
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- About CAB Modal (Brochure) -->
+    <div id="aboutModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-6" style="display: none;">
+        <div id="aboutBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="hideAbout()"></div>
+        
+        <div id="aboutCard" class="relative w-full max-w-5xl max-h-[96vh] night-glass-card rounded-[32px] p-2 flex flex-col items-center shadow-[0_0_80px_rgba(168,85,247,0.3)] border-purple-400/40 z-10">
+            <button class="absolute top-4 right-4 sm:top-5 sm:right-5 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-slate-900/90 backdrop-blur-md border border-purple-400/50 text-purple-200 hover:text-white hover:bg-purple-500 transition-all duration-300 z-50 shadow-[0_5px_20px_rgba(0,0,0,0.6)] hover:scale-110" onclick="hideAbout()">
+                <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+            </button>
+            <div class="w-full h-full overflow-y-auto rounded-[24px] flex flex-col gap-4 sm:gap-6 pb-2 sm:pb-4 custom-scroll">
+                <img src="https://i.imgur.com/hdYOMuX.jpeg" alt="CAB Brochure Page 1" class="w-full h-auto object-contain rounded-[24px] mx-auto block shadow-lg">
+                <img src="https://i.imgur.com/HkG92Ea.png" alt="CAB Brochure Page 2" class="w-full h-auto object-contain rounded-[24px] mx-auto block shadow-lg">
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Modal -->
+    <div id="eventsModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="display: none;">
+        <div id="eventsBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="hideEvents()"></div>
+        
+        <div id="eventsCard" class="relative w-full max-w-2xl max-h-[85vh] night-glass-card rounded-[32px] p-6 sm:p-10 flex flex-col shadow-[0_0_80px_rgba(168,85,247,0.3)] border-purple-400/40 z-10">
+            <div class="flex justify-between items-center mb-6 border-b border-purple-500/20 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-400/30">
+                        <i data-lucide="calendar-days" class="w-5 h-5 text-purple-300"></i>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Upcoming Events</h3>
+                </div>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-900/50 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-600/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" onclick="hideEvents()">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="publicEventsList" class="flex-1 overflow-y-auto custom-scroll pr-2 flex flex-col gap-4">
+                <!-- Events injected here -->
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://nmmshjdknmuzpgpquwec.supabase.co";
         const SUPABASE_KEY = "sb_publishable_PCxlxywY7W6K3TmMrSnSsw_NPXKugoZ";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let state = {
-            config: { portalName: "CAB GCU", portalBio: "", socialHandle: "@cabgcu", avatarUrl: "", links: [], pageViews: 0 },
-            bgImages: [],
-            bgIndex: 0,
-            bgRotationInterval: null
+            config: { 
+                portalName: "CAB GCU", 
+                portalBio: "", 
+                socialHandle: "@cabgcu", 
+                avatarUrl: "", 
+                bgVideoUrl: "", // Now dynamic
+                links: [], 
+                events: [], 
+                stackCards: [], // Now fully dynamic
+                pageViews: 0 
+            },
+            currentStackIndex: 0,
+            stackInterval: null
         };
 
-        // --- SECURITY HELPER ---
+        // Fallbacks only used if db is completely empty for stack cards
+        const defaultStackContentFallback = [
+            { title: "Upcoming Events", desc: "Stay Up To Date With Our Events.", img: "https://i.imgur.com/y4wt546.jpeg", tag: "Campus Life", action: "events" },
+            { title: "About Us", desc: "Building a vibrant GCU community.", img: "https://i.imgur.com/ExsTR9c.png", tag: "Who We Are", action: "about" }
+        ];
+
+        // Security Helper
         function escapeHTML(str) {
             if (!str) return '';
             return str.toString().replace(/[&<>'"]/g, tag => ({
@@ -301,14 +493,36 @@
         }
 
         document.getElementById('year').textContent = new Date().getFullYear();
-        syncData();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            syncData();
+            
+            // GSAP Entrance Animations
+            const tl = gsap.timeline();
+            tl.fromTo(".night-glass-card", 
+                { opacity: 0, y: 60 },
+                { opacity: 1, y: 0, duration: 1.1, ease: "power4.out", stagger: 0.15 }
+            )
+            .from(".logo-box img", {
+                scale: 0,
+                rotation: 360,
+                duration: 0.9,
+                ease: "elastic.out(1, 0.5)"
+            }, "-=0.6")
+            .from("#portalName, #portalBio, #portalHandle, #linksContainer", {
+                opacity: 0,
+                y: 20,
+                stagger: 0.08,
+                duration: 0.5
+            }, "-=0.4");
+
+            gsap.to(".card-logo", { y: -6, duration: 2.2, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        });
 
         async function syncData() {
             try {
-                const [configRes, bgRes] = await Promise.all([
-                    _supabase.from('portal_config').select('*'),
-                    _supabase.from('background_images').select('*')
-                ]);
+                const configRes = await _supabase.from('portal_config').select('*');
+                let foundCards = false;
 
                 if (configRes.data) {
                     configRes.data.forEach(row => {
@@ -316,17 +530,32 @@
                         if (row.key === "PortalBio") state.config.portalBio = row.value;
                         if (row.key === "SocialHandle") state.config.socialHandle = row.value;
                         if (row.key === "AvatarUrl") state.config.avatarUrl = row.value;
+                        if (row.key === "BgVideoUrl") state.config.bgVideoUrl = row.value;
                         if (row.key === "PageViews") state.config.pageViews = parseInt(row.value) || 0;
                         if (row.key === "LinksJson") state.config.links = JSON.parse(row.value || "[]");
+                        if (row.key === "EventsJson") {
+                            // Migrate old single `time` property to `startTime` for backward compatibility
+                            let evs = JSON.parse(row.value || "[]");
+                            evs = evs.map(e => {
+                                if (e.time && !e.startTime) e.startTime = e.time;
+                                return e;
+                            });
+                            state.config.events = evs;
+                        }
+                        if (row.key === "StackCardsJson") {
+                            state.config.stackCards = JSON.parse(row.value || "[]");
+                            foundCards = true;
+                        }
                     });
                 }
 
-                if (bgRes.data) {
-                    state.bgImages = bgRes.data;
+                // If completely empty DB state for cards, use fallback initially
+                if (!foundCards || state.config.stackCards.length === 0) {
+                    state.config.stackCards = [...defaultStackContentFallback];
                 }
 
                 renderPortal();
-                initBackgroundRotation();
+                initCardStack();
 
                 // Track page view once per session load
                 if (!sessionStorage.getItem('viewTracked')) {
@@ -336,14 +565,19 @@
 
             } catch (e) {
                 console.error("Sync error:", e);
-            } finally { 
-                document.getElementById('loading-overlay').style.display = 'none'; 
             }
         }
 
         function renderPortal() {
             document.getElementById('portalName').textContent = state.config.portalName;
             document.getElementById('portalBio').textContent = state.config.portalBio;
+            
+            // Background Video
+            const videoElement = document.getElementById('bgVideo');
+            if (state.config.bgVideoUrl && videoElement.src !== state.config.bgVideoUrl) {
+                videoElement.src = state.config.bgVideoUrl;
+                videoElement.load(); // Ensure new source applies
+            }
             
             const handleEl = document.getElementById('portalHandle');
             if (state.config.socialHandle) {
@@ -356,30 +590,25 @@
                 handleEl.style.display = 'none';
             }
             
-            const avatarFrame = document.getElementById('avatarFrame');
             const adminGateImg = document.getElementById('adminGateImg');
             const profileImg = document.getElementById('profileImg');
             
             if (state.config.avatarUrl) {
                 profileImg.src = state.config.avatarUrl;
                 adminGateImg.src = state.config.avatarUrl;
-                avatarFrame.style.display = 'flex';
             } else { 
                 profileImg.src = "https://i.imgur.com/p2qZOL5.png";
                 adminGateImg.src = "https://i.imgur.com/p2qZOL5.png";
-                avatarFrame.style.display = 'flex';
             }
 
-            // Generate glass buttons for links
             document.getElementById('linksContainer').innerHTML = state.config.links.map((link, i) => `
-                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="glass-button w-full py-3.5 sm:py-4 px-6 rounded-xl relative flex items-center justify-center group overflow-hidden shadow-sm">
-                    <span class="absolute left-6 text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">${escapeHTML(link.icon) || '🔗'}</span>
-                    <span class="font-bold text-[13px] tracking-[0.05em] text-zinc-200 group-hover:text-white transition-colors text-center px-10 w-full block whitespace-nowrap uppercase">${escapeHTML(link.title)}</span>
-                    <i data-lucide="chevron-right" class="absolute right-6 w-5 h-5 text-zinc-500 group-hover:text-purple-400 transition-colors flex-shrink-0 group-hover:translate-x-1 duration-300"></i>
+                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="night-btn-link w-full py-3.5 sm:py-4 px-5 sm:px-6 rounded-2xl relative flex items-center justify-between group overflow-hidden shadow-md">
+                    <span class="text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-125">${escapeHTML(link.icon) || '🔗'}</span>
+                    <span class="font-bold text-[11px] sm:text-xs tracking-wider text-purple-100 group-hover:text-white transition-colors text-center px-3 sm:px-4 flex-1 uppercase truncate">${escapeHTML(link.title)}</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-purple-400/60 group-hover:text-purple-300 transition-all flex-shrink-0 group-hover:translate-x-1 duration-300"></i>
                 </a>
             `).join('');
             
-            // Re-initialize Lucide Icons after dynamic DOM injection
             lucide.createIcons();
         }
 
@@ -387,18 +616,16 @@
             try {
                 const { data } = await _supabase.from('portal_config').select('value').eq('key', 'PageViews').maybeSingle();
                 let currentViews = data ? (parseInt(data.value) || 0) : 0;
-                
                 if (data) {
                     await _supabase.from('portal_config').update({ value: (currentViews + 1).toString() }).eq('key', 'PageViews');
                 } else {
                     await _supabase.from('portal_config').insert([{ key: 'PageViews', value: '1' }]);
                 }
-            } catch (e) { console.warn('Tracking blocked by permissions', e); }
+            } catch (e) { console.warn('Tracking blocked', e); }
         }
 
         async function trackLinkClick(idx) {
             try {
-                // Fetch fresh values to prevent overriding links if someone else edited them
                 const { data } = await _supabase.from('portal_config').select('value').eq('key', 'LinksJson').single();
                 if (data) {
                     let freshLinks = JSON.parse(data.value || "[]");
@@ -411,56 +638,106 @@
         }
 
         function loadAdminValues() {
-            document.getElementById('setProfileName').value = state.config.portalName;
-            document.getElementById('setProfileBio').value = state.config.portalBio;
-            document.getElementById('setSocialHandle').value = state.config.socialHandle;
-            document.getElementById('setAvatarUrl').value = state.config.avatarUrl;
+            document.getElementById('setProfileName').value = state.config.portalName || '';
+            document.getElementById('setProfileBio').value = state.config.portalBio || '';
+            document.getElementById('setSocialHandle').value = state.config.socialHandle || '';
+            document.getElementById('setAvatarUrl').value = state.config.avatarUrl || '';
             document.getElementById('setAdminPassword').value = '';
             
-            // Populate Analytics
             const totalClicks = state.config.links.reduce((sum, link) => sum + (link.clicks || 0), 0);
-            document.getElementById('adminTotalViews').textContent = state.config.pageViews;
+            document.getElementById('adminTotalViews').textContent = state.config.pageViews || 0;
             document.getElementById('adminTotalClicks').textContent = totalClicks;
 
             renderAdminLinks();
-            renderAdminBackgrounds();
+            renderAdminEvents();
+            renderAdminStackCards();
         }
 
-        // --- Background Management ---
-        function renderAdminBackgrounds() {
-            const mgr = document.getElementById('bg-list-manager');
-            if (!state.bgImages || state.bgImages.length === 0) {
-                mgr.innerHTML = `<div class="text-center p-4 text-zinc-500 text-sm italic border border-dashed border-zinc-800 rounded-xl">No custom backgrounds.</div>`;
+        async function uploadBackgroundVideo() {
+            const input = document.getElementById('videoUploadInput');
+            const file = input.files[0];
+            if (!file) return alert("Please select a video file to upload.");
+
+            const btn = document.getElementById('uploadVideoBtn');
+            const loader = document.getElementById('uploadVideoLoader');
+            btn.disabled = true; loader.style.display = "inline-block";
+
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `video_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+                const { data: uploadData, error: uploadError } = await _supabase.storage
+                    .from('backgrounds')
+                    .upload(fileName, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data } = _supabase.storage.from('backgrounds').getPublicUrl(fileName);
+                state.config.bgVideoUrl = data.publicUrl;
+                
+                // Immediately save to configuration so it doesn't get lost before main save
+                await _supabase.from('portal_config').upsert({ key: 'BgVideoUrl', value: state.config.bgVideoUrl }, { onConflict: 'key' });
+                
+                input.value = ""; 
+                renderPortal(); 
+                alert("Video uploaded & saved successfully!");
+            } catch (error) {
+                console.error(error);
+                alert("Upload failed. Make sure your storage bucket 'backgrounds' is configured to allow video uploads.");
+            } finally {
+                btn.disabled = false; loader.style.display = "none";
+            }
+        }
+
+        // --- Card Stack Config ---
+        function renderAdminStackCards() {
+            const mgr = document.getElementById('stack-list-manager');
+            if (state.config.stackCards.length === 0) {
+                mgr.innerHTML = `<div class="text-center p-4 text-purple-300/50 text-xs italic border border-dashed border-purple-400/20 rounded-xl">No stack cards added.</div>`;
                 return;
             }
 
-            mgr.innerHTML = state.bgImages.map((b, i) => `
-                <div class="flex items-center bg-zinc-900 p-2 rounded-xl border border-zinc-800 gap-3 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-[0_5px_15px_rgba(0,0,0,0.3)]">
-                    <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-zinc-700">
-                        <img src="${b.url}" class="w-full h-full object-cover">
+            mgr.innerHTML = state.config.stackCards.map((card, i) => `
+                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-purple-400/40">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-16 rounded-lg overflow-hidden shrink-0 border border-purple-400/30">
+                            <img src="${card.img}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0 flex flex-col justify-center">
+                            <span class="text-sm text-white font-bold truncate">${escapeHTML(card.title)}</span>
+                            <span class="text-[10px] text-purple-300 uppercase tracking-widest mt-0.5 truncate">${escapeHTML(card.tag)}</span>
+                        </div>
+                        <div class="flex gap-1 shrink-0 flex-col items-center">
+                            <button class="bg-slate-800/80 hover:bg-slate-700 text-purple-300 p-1 rounded-lg transition disabled:opacity-30" onclick="moveStackCard(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
+                            <button class="bg-slate-800/80 hover:bg-slate-700 text-purple-300 p-1 rounded-lg transition disabled:opacity-30" onclick="moveStackCard(${i}, 1)" ${i === state.config.stackCards.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <button class="text-rose-400 hover:text-rose-300 p-2 transition shrink-0 hover:scale-110 bg-slate-900/50 rounded-lg" onclick="removeStackCard(${i})" title="Delete">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
                     </div>
-                    <span class="flex-1 text-sm text-zinc-300 font-medium">Image ${i + 1}</span>
-                    <button class="text-rose-500 hover:text-rose-400 p-2 transition shrink-0 hover:scale-110" onclick="deleteBackground('${b.url}')" title="Delete">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
-        async function uploadBackground() {
-            const input = document.getElementById('bgUploadInput');
-            const file = input.files[0];
-            if (!file) return alert("Please select an image file first.");
+        async function addStackCardUI() {
+            const fileInput = document.getElementById('newCardImgUpload');
+            const title = document.getElementById('newCardTitle').value;
+            const desc = document.getElementById('newCardDesc').value;
+            const tag = document.getElementById('newCardTag').value;
+            const action = document.getElementById('newCardAction').value;
+            
+            const file = fileInput.files[0];
+            if (!file) return alert("Please select an image file for the card.");
+            if (!title) return alert("Please provide a title for the card.");
 
-            const btn = document.getElementById('uploadBgBtn');
-            const loader = document.getElementById('uploadBgLoader');
-            btn.disabled = true;
-            loader.style.display = "inline-block";
+            const btn = document.getElementById('addCardBtn');
+            const loader = document.getElementById('addCardLoader');
+            btn.disabled = true; loader.style.display = "inline-block";
 
             try {
                 const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const fileName = `card_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
 
                 const { data: uploadData, error: uploadError } = await _supabase.storage
                     .from('backgrounds')
@@ -471,62 +748,65 @@
                 const { data } = _supabase.storage.from('backgrounds').getPublicUrl(fileName);
                 const publicUrl = data.publicUrl;
 
-                const { data: insertData, error: insertError } = await _supabase
-                    .from('background_images')
-                    .insert([{ url: publicUrl }])
-                    .select();
+                state.config.stackCards.push({
+                    title: title,
+                    desc: desc,
+                    tag: tag,
+                    action: action,
+                    img: publicUrl
+                });
 
-                if (insertError) throw insertError;
-
-                state.bgImages.push(insertData ? insertData[0] : { url: publicUrl });
-                input.value = ""; 
-                renderAdminBackgrounds();
-                initBackgroundRotation();
-
+                fileInput.value = "";
+                document.getElementById('newCardTitle').value = "";
+                document.getElementById('newCardDesc').value = "";
+                document.getElementById('newCardTag').value = "";
+                document.getElementById('newCardAction').value = "none";
+                
+                renderAdminStackCards();
+                initCardStack();
             } catch (error) {
                 console.error(error);
-                alert("Upload failed. Make sure you have created a public Storage bucket named 'backgrounds'.");
+                alert("Upload failed. Verify 'backgrounds' storage bucket permissions.");
             } finally {
-                btn.disabled = false;
-                loader.style.display = "none";
+                btn.disabled = false; loader.style.display = "none";
             }
         }
 
-        async function deleteBackground(url) {
-            if (!confirm("Are you sure you want to delete this background?")) return;
-            
-            try {
-                const fileName = url.split('/backgrounds/').pop();
-                if (fileName && fileName !== url) {
-                    await _supabase.storage.from('backgrounds').remove([fileName]);
-                }
-            } catch(e) { console.warn("Could not delete from storage bucket", e); }
+        function moveStackCard(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= state.config.stackCards.length) return;
+            const temp = state.config.stackCards[index];
+            state.config.stackCards[index] = state.config.stackCards[newIndex];
+            state.config.stackCards[newIndex] = temp;
+            renderAdminStackCards();
+            initCardStack();
+        }
 
-            await _supabase.from('background_images').delete().eq('url', url);
-            
-            state.bgImages = state.bgImages.filter(b => b.url !== url);
-            renderAdminBackgrounds();
-            initBackgroundRotation();
+        function removeStackCard(idx) {
+            if(!confirm("Remove this card?")) return;
+            state.config.stackCards.splice(idx, 1);
+            renderAdminStackCards();
+            initCardStack();
         }
 
         // --- Link Management ---
         function renderAdminLinks() {
             const mgr = document.getElementById('link-list-manager');
             mgr.innerHTML = state.config.links.map((l, i) => `
-                <div class="flex flex-col bg-zinc-900 p-3 rounded-xl border border-zinc-800 gap-2 mb-2 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-[0_5px_15px_rgba(0,0,0,0.3)]">
+                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-purple-400/40">
                     <div class="flex items-center gap-2">
-                        <input type="text" class="w-10 bg-zinc-950 border border-zinc-800 text-white rounded-lg text-center py-1.5 outline-none focus:border-purple-500 transition" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
-                        <span class="flex-1 text-sm text-zinc-200 font-medium truncate pl-1">${escapeHTML(l.title)}</span>
+                        <input type="text" class="w-10 bg-slate-900/80 border border-purple-400/30 text-white rounded-lg text-center py-1.5 outline-none focus:border-purple-400 text-xs" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
+                        <span class="flex-1 text-xs text-purple-100 font-medium truncate pl-1">${escapeHTML(l.title)}</span>
                         <div class="flex gap-1 shrink-0">
-                            <button class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
-                            <button class="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, 1)" ${i === state.config.links.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+                            <button class="bg-slate-800/80 hover:bg-slate-700 text-purple-300 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
+                            <button class="bg-slate-800/80 hover:bg-slate-700 text-purple-300 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, 1)" ${i === state.config.links.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
                         </div>
-                        <button class="text-rose-500 hover:text-rose-400 p-2 transition shrink-0 hover:scale-110" onclick="removeLink(${i})" title="Delete">
+                        <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110" onclick="removeLink(${i})" title="Delete">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <div class="text-[10px] text-purple-400 font-bold ml-[52px] uppercase tracking-widest flex items-center">
-                        <i data-lucide="mouse-pointer-click" class="w-3 h-3 mr-1.5"></i> ${l.clicks || 0} clicks
+                    <div class="text-[10px] text-purple-300/70 font-semibold ml-[48px] uppercase tracking-wider flex items-center">
+                        <i data-lucide="mouse-pointer-click" class="w-3 h-3 mr-1 text-purple-400"></i> ${l.clicks || 0} total clicks
                     </div>
                 </div>
             `).join('');
@@ -550,7 +830,7 @@
             const i = document.getElementById('newLinkIcon').value || '🔗';
             const t = document.getElementById('newLinkTitle').value;
             const u = document.getElementById('newLinkUrl').value;
-            if(!t || !u) return;
+            if(!t || !u) return alert("Please enter both link title and URL.");
             
             state.config.links.push({title:t, url:u, icon: i, clicks: 0});
             
@@ -560,60 +840,69 @@
             renderAdminLinks();
         }
 
-        // --- View Navigation & Auth ---
-        function switchView(v) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.getElementById(v + 'View').classList.add('active');
-            if(v === 'admin') loadAdminValues();
-            
-            // Scroll to top when switching views
-            document.querySelector('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function checkAuthAndShowAdmin() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                switchView('admin');
-            } else {
-                showGate();
+        function renderAdminEvents() {
+            const mgr = document.getElementById('event-list-manager');
+            if (state.config.events.length === 0) {
+                mgr.innerHTML = `<div class="text-center p-3 text-purple-300/50 text-xs italic border border-dashed border-purple-400/20 rounded-xl">No events scheduled.</div>`;
+                return;
             }
+
+            const sortedEvents = [...state.config.events].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            mgr.innerHTML = sortedEvents.map((ev, i) => `
+                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-purple-400/40">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <h4 class="text-sm font-bold text-white truncate">${escapeHTML(ev.title)}</h4>
+                            <div class="text-xs text-purple-300/80 mt-1 flex flex-wrap items-center gap-2">
+                                <span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDateDisplay(ev.date)}</span>
+                                ${ev.startTime ? `<span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="clock" class="w-3 h-3 ml-1 text-purple-400"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110 bg-slate-900/50 rounded-lg" onclick="removeEvent('${ev.id}')" title="Delete Event">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
         }
 
-        async function adminLogout() {
-            await _supabase.auth.signOut();
-            switchView('portal');
+        function addEventUI() {
+            const title = document.getElementById('newEventTitle').value;
+            const date = document.getElementById('newEventDate').value;
+            const startTime = document.getElementById('newEventStartTime').value;
+            const endTime = document.getElementById('newEventEndTime').value;
+            const location = document.getElementById('newEventLocation').value;
+            const desc = document.getElementById('newEventDesc').value;
+
+            if(!title || !date) return alert("Event Title and Date are required.");
+            
+            const newEvent = {
+                id: 'evt_' + Date.now().toString(36),
+                title: title,
+                date: date,
+                startTime: startTime,
+                endTime: endTime,
+                location: location,
+                desc: desc
+            };
+
+            state.config.events.push(newEvent);
+            
+            document.getElementById('newEventTitle').value = '';
+            document.getElementById('newEventDate').value = '';
+            document.getElementById('newEventStartTime').value = '';
+            document.getElementById('newEventEndTime').value = '';
+            document.getElementById('newEventLocation').value = '';
+            document.getElementById('newEventDesc').value = '';
+            
+            renderAdminEvents();
         }
 
-        function showGate() { document.getElementById('gateModal').style.display = 'block'; }
-        function hideGate() { 
-            document.getElementById('gateModal').style.display = 'none'; 
-            document.getElementById('adminEmail').value = "";
-            document.getElementById('adminPass').value = ""; 
-        }
-
-        async function verifyAdmin() {
-            const email = document.getElementById('adminEmail').value.trim();
-            const pass = document.getElementById('adminPass').value;
-            const loader = document.getElementById('gateLoader');
-            
-            if (!email || !pass) return alert("Please enter both email and password.");
-            
-            loader.style.display = "inline-block";
-            
-            try {
-                const { data, error } = await _supabase.auth.signInWithPassword({
-                    email: email,
-                    password: pass
-                });
-
-                if (error) {
-                    alert(error.message);
-                } else if (data.session) {
-                    hideGate();
-                    switchView('admin');
-                }
-            } catch (e) { alert("Error connecting to authentication service"); }
-            loader.style.display = "none";
+        function removeEvent(id) {
+            state.config.events = state.config.events.filter(e => e.id !== id);
+            renderAdminEvents();
         }
 
         async function saveAdminSettings() {
@@ -625,25 +914,22 @@
                 { key: 'PortalBio', value: document.getElementById('setProfileBio').value },
                 { key: 'SocialHandle', value: document.getElementById('setSocialHandle').value },
                 { key: 'AvatarUrl', value: document.getElementById('setAvatarUrl').value },
-                { key: 'LinksJson', value: JSON.stringify(state.config.links) }
+                { key: 'LinksJson', value: JSON.stringify(state.config.links) },
+                { key: 'EventsJson', value: JSON.stringify(state.config.events) },
+                { key: 'StackCardsJson', value: JSON.stringify(state.config.stackCards) }
             ];
 
             btn.disabled = true; loader.style.display = "inline-block";
             
             try {
-                // Update Password if typed in
                 const newPass = document.getElementById('setAdminPassword').value;
                 if (newPass.trim() !== '') {
                     const { error: authError } = await _supabase.auth.updateUser({ password: newPass.trim() });
                     if (authError) throw new Error("Failed to update password: " + authError.message);
                 }
 
-                // Update DB Settings
                 for (const item of updates) {
-                    await _supabase
-                        .from('portal_config')
-                        .update({ value: item.value })
-                        .eq('key', item.key);
+                    await _supabase.from('portal_config').upsert({ key: item.key, value: item.value }, { onConflict: 'key' });
                 }
                 location.reload();
             } catch (e) { 
@@ -653,33 +939,357 @@
             }
         }
 
-        function initBackgroundRotation() {
-            const container = document.getElementById('bg-container');
-            if (!container) return; // Prevent JS error if container was removed from DOM
+        function initCardStack() {
+            const container = document.getElementById('card-stack');
+            if (!container) return;
+            renderStackCards();
+            startStackAutoPlay();
+        }
 
-            if (state.bgRotationInterval) clearInterval(state.bgRotationInterval);
+        function renderStackCards() {
+            const container = document.getElementById('card-stack');
+            
+            // If empty, supply a basic placeholder so it's never completely blank
+            const renderCards = state.config.stackCards.length > 0 ? state.config.stackCards : [{
+                title: "Welcome", desc: "Configure your portal in settings.", img: "https://placehold.co/800x1200/0f172a/a855f7?text=CAB+Portal", tag: "System", action: "none"
+            }];
 
-            if (!state.bgImages || state.bgImages.length === 0) {
-                // Keep the default static background logic (don't clear it) if no DB images exist
+            container.innerHTML = renderCards.map((card, i) => {
+                let actionBtnHTML = '';
+                if (card.action === 'about') {
+                    actionBtnHTML = `
+                        <button onclick="event.stopPropagation(); showAbout()" class="mt-4 sm:mt-5 pointer-events-auto w-fit flex items-center gap-2 bg-purple-600/50 hover:bg-purple-500/80 border border-purple-400/50 px-4 sm:px-5 py-2.5 rounded-xl text-white text-xs font-bold tracking-wide shadow-lg transition-all hover:scale-105">
+                            <i data-lucide="book-open" class="w-4 h-4"></i> Read Brochure
+                        </button>
+                    `;
+                } else if (card.action === 'events') {
+                    actionBtnHTML = `
+                        <button onclick="event.stopPropagation(); showEvents()" class="mt-4 sm:mt-5 pointer-events-auto w-fit flex items-center gap-2 night-btn-primary px-4 sm:px-5 py-2.5 rounded-xl text-white text-xs font-bold tracking-wide shadow-lg transition-all hover:scale-105">
+                            <i data-lucide="calendar-plus" class="w-4 h-4"></i> View Events
+                        </button>
+                    `;
+                }
+
+                return `
+                <div class="stack-card absolute w-full h-full night-glass-card rounded-[36px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer" onclick="nextStackCard()">
+                    <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-105" style="background-image: url('${escapeHTML(card.img)}')"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col justify-end p-6 sm:p-10 z-10 pointer-events-none">
+                        <span class="inline-block px-3.5 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-[10px] font-bold tracking-widest uppercase mb-3 w-fit backdrop-blur-md shadow-lg">
+                            ${escapeHTML(card.tag)}
+                        </span>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg mb-2">${escapeHTML(card.title)}</h3>
+                        <p class="text-xs sm:text-sm text-purple-200/80 font-medium whitespace-pre-wrap">${escapeHTML(card.desc)}</p>
+                        <div class="flex gap-3 flex-wrap">
+                            ${actionBtnHTML}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            
+            updateStackTransforms();
+            lucide.createIcons();
+        }
+
+        function updateStackTransforms() {
+            const cards = document.querySelectorAll('.stack-card');
+            const total = cards.length;
+            
+            cards.forEach((card, i) => {
+                let offset = (i - state.currentStackIndex) % total;
+                if (offset < 0) offset += total;
+                
+                if (offset === 0) { // Top Card
+                    card.style.transform = "translateY(0) scale(1)";
+                    card.style.zIndex = 30;
+                    card.style.opacity = 1;
+                    card.style.pointerEvents = "auto";
+                } else if (offset === 1) { // Second Card
+                    card.style.transform = "translateY(28px) scale(0.93)";
+                    card.style.zIndex = 20;
+                    card.style.opacity = 0.75;
+                    card.style.pointerEvents = "none";
+                } else if (offset === 2) { // Third Card
+                    card.style.transform = "translateY(56px) scale(0.86)";
+                    card.style.zIndex = 10;
+                    card.style.opacity = 0.45;
+                    card.style.pointerEvents = "none";
+                } else { // Hidden Cards
+                    card.style.transform = "translateY(75px) scale(0.8)";
+                    card.style.zIndex = 0;
+                    card.style.opacity = 0;
+                    card.style.pointerEvents = "none";
+                }
+            });
+        }
+
+        function nextStackCard() {
+            const numCards = Math.max(state.config.stackCards.length, 1);
+            if(numCards <= 1) return;
+            state.currentStackIndex = (state.currentStackIndex + 1) % numCards;
+            updateStackTransforms();
+            startStackAutoPlay();
+        }
+
+        function startStackAutoPlay() {
+            if(state.stackInterval) clearInterval(state.stackInterval);
+            state.stackInterval = setInterval(() => {
+                nextStackCard();
+            }, 4500); 
+        }
+
+        function switchView(v) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            const targetView = document.getElementById(v + 'View');
+            targetView.classList.add('active');
+            
+            gsap.fromTo(targetView, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 });
+            if(v === 'admin') loadAdminValues();
+            document.querySelector('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function checkAuthAndShowAdmin() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) switchView('admin'); else showGate();
+        }
+
+        async function adminLogout() {
+            await _supabase.auth.signOut();
+            switchView('portal');
+        }
+
+        function showGate() {
+            const modal = document.getElementById('gateModal');
+            modal.style.display = 'flex';
+            gsap.fromTo("#gateBackdrop", { opacity: 0 }, { opacity: 1, duration: 0.3 });
+            gsap.fromTo("#gateCard", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.5)" });
+        }
+
+        function hideGate() { 
+            gsap.to("#gateModal", {opacity: 0, duration: 0.2, onComplete: () => {
+                const modal = document.getElementById('gateModal');
+                modal.style.display = 'none'; 
+                modal.style.opacity = '1';
+                document.getElementById('adminEmail').value = "";
+                document.getElementById('adminPass').value = ""; 
+            }});
+        }
+
+        function showAbout() {
+            const modal = document.getElementById('aboutModal');
+            modal.style.display = 'flex';
+            gsap.fromTo("#aboutBackdrop", { opacity: 0 }, { opacity: 1, duration: 0.3 });
+            gsap.fromTo("#aboutCard", { scale: 0.8, opacity: 0, y: 20 }, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.2)" });
+        }
+
+        function hideAbout() { 
+            gsap.to("#aboutModal", {opacity: 0, duration: 0.3, onComplete: () => {
+                const modal = document.getElementById('aboutModal');
+                modal.style.display = 'none';
+                modal.style.opacity = '1';
+            }});
+        }
+
+        async function verifyAdmin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const pass = document.getElementById('adminPass').value;
+            const loader = document.getElementById('gateLoader');
+            
+            if (!email || !pass) return alert("Please enter both admin email and password.");
+            
+            loader.style.display = "inline-block";
+            
+            try {
+                const { data, error } = await _supabase.auth.signInWithPassword({ email: email, password: pass });
+                if (error) alert(error.message);
+                else if (data.session) {
+                    hideGate();
+                    switchView('admin');
+                }
+            } catch (e) { alert("Error authenticating admin account."); }
+            loader.style.display = "none";
+        }
+
+        function showEvents() {
+            renderPublicEvents();
+            const modal = document.getElementById('eventsModal');
+            modal.style.display = 'flex';
+            gsap.fromTo("#eventsBackdrop", { opacity: 0 }, { opacity: 1, duration: 0.3 });
+            gsap.fromTo("#eventsCard", { scale: 0.9, opacity: 0, y: 30 }, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.2)" });
+        }
+
+        function hideEvents() { 
+            gsap.to("#eventsModal", {opacity: 0, duration: 0.2, onComplete: () => {
+                const modal = document.getElementById('eventsModal');
+                modal.style.display = 'none';
+                modal.style.opacity = '1';
+            }});
+        }
+
+        function renderPublicEvents() {
+            const container = document.getElementById('publicEventsList');
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            
+            const upcomingEvents = state.config.events
+                .filter(ev => {
+                    const evDate = new Date(ev.date + 'T00:00:00'); 
+                    return evDate >= now;
+                })
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (upcomingEvents.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-10 text-center opacity-70">
+                        <i data-lucide="calendar-x" class="w-12 h-12 text-purple-400 mb-4 opacity-50"></i>
+                        <p class="text-white font-medium">No upcoming events right now.</p>
+                        <p class="text-xs text-purple-200 mt-2">Check back later for new activities!</p>
+                    </div>`;
+                lucide.createIcons();
                 return;
             }
 
-            container.innerHTML = state.bgImages.map((b, i) => `<div class="bg-slide ${i === 0 ? 'active' : ''}" style="background-image: url('${b.url}')"></div>`).join('');
+            container.innerHTML = upcomingEvents.map(ev => {
+                const evDate = new Date(ev.date + 'T00:00:00');
+                const month = evDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+                const day = evDate.getDate();
+
+                let timeDisplay = '';
+                if (ev.startTime) {
+                    timeDisplay = `<div class="flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="clock" class="w-3.5 h-3.5 text-purple-400"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</div>`;
+                }
+
+                return `
+                <div class="night-glass-card-subtle p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center group hover:border-purple-400/50 transition-all duration-300">
+                    <div class="flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-400/30 shadow-inner group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] font-bold text-purple-300 tracking-wider -mb-1">${month}</span>
+                        <span class="text-xl sm:text-2xl font-extrabold text-white">${day}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base sm:text-lg font-bold text-white mb-1 leading-tight">${escapeHTML(ev.title)}</h4>
+                        <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs font-medium text-purple-200/80 mb-2">
+                            ${timeDisplay}
+                            ${ev.location ? `<div class="flex items-center gap-1.5 truncate"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-purple-400"></i> ${escapeHTML(ev.location)}</div>` : ''}
+                        </div>
+                        ${ev.desc ? `<p class="text-xs text-purple-200/60 leading-relaxed">${escapeHTML(ev.desc)}</p>` : ''}
+                    </div>
+                    <div class="flex-shrink-0 flex flex-row sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                        <a href="${generateGoogleCalLink(ev)}" target="_blank" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900/60 hover:bg-slate-800 border border-purple-400/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
+                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-purple-400 group-hover/btn:text-white transition-colors"></i> Google Cal
+                        </a>
+                        <button onclick="downloadICS('${escapeHTML(ev.title)}', '${ev.date}', '${ev.startTime}', '${ev.endTime}', '${escapeHTML(ev.location)}', '${escapeHTML(ev.desc)}')" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900/60 hover:bg-slate-800 border border-purple-400/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400 group-hover/btn:text-white transition-colors"></i> Apple (.ics)
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
             
-            if(state.bgImages.length > 1) {
-                state.bgIndex = 0;
-                state.bgRotationInterval = setInterval(() => {
-                    const slides = container.querySelectorAll('.bg-slide');
-                    if (slides.length > 1) {
-                        slides[state.bgIndex].classList.remove('active');
-                        state.bgIndex = (state.bgIndex + 1) % slides.length;
-                        slides[state.bgIndex].classList.add('active');
-                    }
-                }, 6000);
-            }
+            lucide.createIcons();
         }
-        
-        // Initial setup for static icons
+
+        // Helpers
+        function formatDateDisplay(dateStr) {
+            if(!dateStr) return '';
+            const d = new Date(dateStr + 'T00:00:00'); 
+            return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        function formatTimeDisplay(timeStr) {
+            if(!timeStr) return '';
+            const [h, m] = timeStr.split(':');
+            const d = new Date();
+            d.setHours(parseInt(h), parseInt(m));
+            return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function generateGoogleCalLink(ev) {
+            const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+            const text = `&text=${encodeURIComponent(ev.title)}`;
+            const details = ev.desc ? `&details=${encodeURIComponent(ev.desc)}` : '';
+            const location = ev.location ? `&location=${encodeURIComponent(ev.location)}` : '';
+            
+            let dates = '';
+            if (ev.startTime) {
+                const dStart = new Date(`${ev.date}T${ev.startTime}`);
+                const startStr = dStart.toISOString().replace(/-|:|\.\d\d\d/g, '');
+                
+                let dEnd;
+                if (ev.endTime) {
+                    dEnd = new Date(`${ev.date}T${ev.endTime}`);
+                    // Handle case where end time crosses midnight
+                    if (dEnd < dStart) dEnd.setDate(dEnd.getDate() + 1);
+                } else {
+                    dEnd = new Date(dStart);
+                    dEnd.setHours(dEnd.getHours() + 2); // Default 2 hours if no end time provided
+                }
+                const endStr = dEnd.toISOString().replace(/-|:|\.\d\d\d/g, '');
+                dates = `&dates=${startStr}/${endStr}`;
+            } else {
+                const startStr = ev.date.replace(/-/g, '');
+                const d = new Date(ev.date + 'T00:00:00');
+                d.setDate(d.getDate() + 1);
+                const endStr = d.toISOString().split('T')[0].replace(/-/g, '');
+                dates = `&dates=${startStr}/${endStr}`;
+            }
+
+            return `${baseUrl}${text}${dates}${details}${location}`;
+        }
+
+        function downloadICS(title, date, startTime, endTime, location, desc) {
+            const now = new Date().toISOString().replace(/-|:|\.\d\d\d/g, '');
+            let dtstart, dtend;
+
+            if (startTime && startTime !== 'undefined') {
+                const dStart = new Date(`${date}T${startTime}`);
+                dtstart = dStart.toISOString().replace(/-|:|\.\d\d\d/g, '');
+                
+                let dEnd;
+                if (endTime && endTime !== 'undefined') {
+                    dEnd = new Date(`${date}T${endTime}`);
+                    if (dEnd < dStart) dEnd.setDate(dEnd.getDate() + 1);
+                } else {
+                    dEnd = new Date(dStart);
+                    dEnd.setHours(dEnd.getHours() + 2);
+                }
+                dtend = dEnd.toISOString().replace(/-|:|\.\d\d\d/g, '');
+            } else {
+                dtstart = date.replace(/-/g, '');
+                const d = new Date(date + 'T00:00:00');
+                d.setDate(d.getDate() + 1);
+                dtend = d.toISOString().split('T')[0].replace(/-/g, '');
+                dtstart = `;VALUE=DATE:${dtstart}`;
+                dtend = `;VALUE=DATE:${dtend}`;
+            }
+
+            const safeTitle = (title || "").replace(/,/g, '\\,');
+            const safeDesc = (desc || "").replace(/\n/g, '\\n').replace(/,/g, '\\,');
+            const safeLocation = (location || "").replace(/,/g, '\\,');
+
+            const icsData = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//CAB Portal//EN',
+                'BEGIN:VEVENT',
+                `UID:${Date.now()}@cabgcu`,
+                `DTSTAMP:${now}`,
+                (startTime && startTime !== 'undefined') ? `DTSTART:${dtstart}` : `DTSTART${dtstart}`,
+                (startTime && startTime !== 'undefined') ? `DTEND:${dtend}` : `DTEND${dtend}`,
+                `SUMMARY:${safeTitle}`,
+                `DESCRIPTION:${safeDesc}`,
+                `LOCATION:${safeLocation}`,
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].join('\n');
+
+            const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', `${safeTitle.replace(/ /g, '_')}.ics`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         lucide.createIcons();
     </script>
 </body>
