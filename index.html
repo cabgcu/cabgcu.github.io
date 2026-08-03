@@ -509,7 +509,7 @@
                 duration: 0.9,
                 ease: "elastic.out(1, 0.5)"
             }, "-=0.6")
-            .from("#portalName, #portalBio, #portalHandle, #linksContainer", {
+            .from("#portalName, #portalBio, #linksContainer", {
                 opacity: 0,
                 y: 20,
                 stagger: 0.08,
@@ -581,11 +581,12 @@
             
             const handleEl = document.getElementById('portalHandle');
             if (state.config.socialHandle) {
-                handleEl.style.display = 'inline-block';
                 handleEl.textContent = state.config.socialHandle;
                 const cleanHandle = state.config.socialHandle.replace('@', '').trim();
                 handleEl.href = `https://instagram.com/${cleanHandle}`;
                 handleEl.target = "_blank";
+                handleEl.style.display = 'inline-block';
+                handleEl.style.opacity = '1';
             } else {
                 handleEl.style.display = 'none';
             }
