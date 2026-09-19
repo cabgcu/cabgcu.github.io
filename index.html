@@ -57,27 +57,27 @@
 
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); }
-        ::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,0.6); }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0,0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255,0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255,0.6); }
 
         /* Security Input Masking */
         .no-save-pass { -webkit-text-security: disc !important; text-security: disc !important; }
 
         /* NIGHT GLASS CARDS (admin panel) */
         .night-glass-card {
-            background: rgba(15, 23, 42, 0.45);
+            background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(167, 139, 250, 0.3);
-            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.65), 0 0 80px rgba(124, 58, 237, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.65), 0 0 80px rgba(255, 255, 255, 0.25);
         }
 
         .night-glass-card-subtle {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(167, 139, 250, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
         .logo-box { position: relative; display: flex; justify-content: center; align-items: center; }
@@ -88,7 +88,7 @@
             width: 130px;
             height: 130px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(168, 85, 247, 0.85), rgba(99, 102, 241, 0.65), rgba(37, 99, 235, 0.4), transparent 75%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.4), transparent 75%);
             filter: blur(28px);
             animation: logoGlowPulse 4s infinite ease-in-out;
             pointer-events: none;
@@ -101,37 +101,40 @@
 
         /* NIGHT GLASS BUTTONS (admin panel) */
         .night-btn-primary {
-            background: linear-gradient(135deg, #a855f7, #6366f1, #2563eb);
-            color: white;
-            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.45);
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 15px 35px rgba(255, 255, 255, 0.25);
             transition: all 0.3s ease;
         }
 
         .night-btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 20px 45px rgba(99, 102, 241, 0.65);
+            background: #e5e5e5;
+            box-shadow: 0 20px 45px rgba(255, 255, 255, 0.4);
         }
 
+        .night-btn-primary .loader { border-color: #000; border-bottom-color: transparent; }
+
         .night-btn-link {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(167, 139, 250, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .night-btn-link:hover {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: rgba(168, 85, 247, 0.7);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.7);
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.35);
+            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.35);
         }
 
         /* INPUT STYLES (admin panel) */
         .control-input {
             width: 100%;
-            background: rgba(15, 23, 42, 0.65);
-            border: 1px solid rgba(167, 139, 250, 0.45);
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.45);
             color: #ffffff;
             border-radius: 1rem;
             padding: 0.85rem 1.1rem;
@@ -144,22 +147,22 @@
         .control-input::placeholder { color: rgba(255, 255, 255, 0.5); }
 
         .control-input:focus {
-            border-color: #60a5fa;
-            background: rgba(15, 23, 42, 0.85);
-            box-shadow: 0 0 25px rgba(96, 165, 250, 0.4);
+            border-color: #ffffff;
+            background: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
             transform: translateY(-1px);
         }
 
         select.control-input {
             appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1em;
         }
 
         select.control-input option {
-            background-color: #0f172a;
+            background-color: #000000;
             color: #fff;
         }
 
@@ -176,11 +179,11 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="antialiased text-white min-h-[100dvh] w-full relative overflow-x-hidden selection:bg-purple-500/30 font-sans flex justify-center">
+<body class="antialiased text-white min-h-[100dvh] w-full relative overflow-x-hidden selection:bg-white/30 font-sans flex justify-center">
 
     <!-- Background Decoration -->
-    <div class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-purple-500/10 blur-[100px] pointer-events-none -z-10"></div>
-    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none -z-10"></div>
+    <div class="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-white/10 blur-[100px] pointer-events-none -z-10"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-white/10 blur-[120px] pointer-events-none -z-10"></div>
 
     <main class="w-full max-w-md min-h-[100dvh] relative flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar bg-black md:rounded-3xl md:my-8 border-x border-white/5 md:border-y shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
 
@@ -232,13 +235,13 @@
 
             <!-- ADMIN VIEW -->
             <div id="adminView" class="view flex-col w-full max-w-[400px] mx-auto px-6 py-8">
-                <div class="flex justify-between items-center mb-8 border-b border-purple-500/20 pb-4">
+                <div class="flex justify-between items-center mb-8 border-b border-white/20 pb-4">
                     <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                        <i data-lucide="sliders" class="w-5 h-5 text-purple-400"></i> Portal Settings
+                        <i data-lucide="sliders" class="w-5 h-5 text-white/80"></i> Portal Settings
                     </h2>
                     <div class="flex gap-2">
-                        <button class="night-btn-link text-purple-200 hover:text-white px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 font-semibold" onclick="adminLogout()">
-                            <i data-lucide="lock" class="w-3.5 h-3.5 text-purple-400"></i> Lock
+                        <button class="night-btn-link text-white/70 hover:text-white px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 font-semibold" onclick="adminLogout()">
+                            <i data-lucide="lock" class="w-3.5 h-3.5 text-white/80"></i> Lock
                         </button>
                         <button class="night-btn-primary px-3 py-2 rounded-xl text-xs font-bold" onclick="switchView('portal')">
                             Close
@@ -247,21 +250,21 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-3.5 mb-8">
-                    <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-purple-400/50">
-                        <i data-lucide="eye" class="w-6 h-6 text-purple-400 mb-1.5"></i>
+                    <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-white/50">
+                        <i data-lucide="eye" class="w-6 h-6 text-white/80 mb-1.5"></i>
                         <span class="text-2xl font-extrabold text-white" id="adminTotalViews">0</span>
-                        <span class="text-[10px] text-purple-300/70 uppercase tracking-widest mt-1">Page Views</span>
+                        <span class="text-[10px] text-white/70 uppercase tracking-widest mt-1">Page Views</span>
                     </div>
-                    <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/50">
-                        <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-indigo-400 mb-1.5"></i>
+                    <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-white/50">
+                        <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-white/80 mb-1.5"></i>
                         <span class="text-2xl font-extrabold text-white" id="adminTotalClicks">0</span>
-                        <span class="text-[10px] text-purple-300/70 uppercase tracking-widest mt-1">Total Clicks</span>
+                        <span class="text-[10px] text-white/70 uppercase tracking-widest mt-1">Total Clicks</span>
                     </div>
                 </div>
 
                 <!-- Branding Settings -->
-                <div class="mb-8 border-b border-purple-500/20 pb-8">
-                    <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <div class="mb-8 border-b border-white/20 pb-8">
+                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="user" class="w-3.5 h-3.5"></i> Branding & Profile
                     </label>
                     <input type="text" id="setProfileName" class="control-input" placeholder="Display Name">
@@ -272,55 +275,55 @@
                 </div>
 
                 <!-- Background Video Management -->
-                <div class="mb-8 border-b border-purple-500/20 pb-8">
-                    <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <div class="mb-8 border-b border-white/20 pb-8">
+                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="video" class="w-3.5 h-3.5"></i> Background Video
                     </label>
-                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30">
-                        <input type="file" id="videoUploadInput" accept="video/mp4,video/webm" class="w-full text-xs text-purple-200/70 mb-3 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600/30 file:text-purple-200 hover:file:bg-purple-600/50 transition cursor-pointer">
+                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-white/30">
+                        <input type="file" id="videoUploadInput" accept="video/mp4,video/webm" class="w-full text-xs text-white/70 mb-3 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-white/30 file:text-white/70 hover:file:bg-white/50 transition cursor-pointer">
                         <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2" onclick="uploadBackgroundVideo()" id="uploadVideoBtn">
-                            <i data-lucide="upload-cloud" class="w-4 h-4 text-purple-400"></i> Upload New Video to Storage
+                            <i data-lucide="upload-cloud" class="w-4 h-4 text-white/80"></i> Upload New Video to Storage
                             <div class="loader" id="uploadVideoLoader"></div>
                         </button>
                     </div>
                 </div>
 
                 <!-- Link Manager -->
-                <div class="mb-8 border-b border-purple-500/20 pb-8">
-                    <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <div class="mb-8 border-b border-white/20 pb-8">
+                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="link" class="w-3.5 h-3.5"></i> Manage Links
                     </label>
                     <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[220px] overflow-y-auto pr-1"></div>
 
-                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30 flex flex-col gap-3">
+                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-white/30 flex flex-col gap-3">
                         <div class="flex gap-2">
                             <input type="text" id="newLinkIcon" class="control-input !mb-0 w-16 text-center text-lg" placeholder="🔗">
                             <input type="text" id="newLinkTitle" class="control-input !mb-0 flex-1" placeholder="Link Title">
                         </div>
                         <input type="text" id="newLinkUrl" class="control-input !mb-0" placeholder="https://...">
                         <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2" onclick="addLinkUI()">
-                            <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Link Button
+                            <i data-lucide="plus" class="w-4 h-4 text-white/80"></i> Add New Link Button
                         </button>
                     </div>
                 </div>
 
                 <!-- Event Manager -->
-                <div class="mb-8 border-b border-purple-500/20 pb-8">
-                    <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <div class="mb-8 border-b border-white/20 pb-8">
+                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Manage Events
                     </label>
                     <div id="event-list-manager" class="flex flex-col gap-2 mb-4 max-h-[220px] overflow-y-auto pr-1"></div>
 
-                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-purple-400/30 flex flex-col gap-3">
+                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-white/30 flex flex-col gap-3">
                         <input type="text" id="newEventTitle" class="control-input !mb-0" placeholder="Event Title">
                         <input type="date" id="newEventDate" class="control-input !mb-0 w-full" style="color-scheme: dark;">
                         <div class="flex flex-col sm:flex-row gap-2">
                             <div class="flex-1">
-                                <label class="text-[10px] text-purple-300/70 font-bold uppercase pl-1 mb-1 block">Start Time</label>
+                                <label class="text-[10px] text-white/70 font-bold uppercase pl-1 mb-1 block">Start Time</label>
                                 <input type="time" id="newEventStartTime" class="control-input !mb-0 w-full" style="color-scheme: dark;">
                             </div>
                             <div class="flex-1">
-                                <label class="text-[10px] text-purple-300/70 font-bold uppercase pl-1 mb-1 block">End Time</label>
+                                <label class="text-[10px] text-white/70 font-bold uppercase pl-1 mb-1 block">End Time</label>
                                 <input type="time" id="newEventEndTime" class="control-input !mb-0 w-full" style="color-scheme: dark;">
                             </div>
                         </div>
@@ -328,14 +331,14 @@
                         <textarea id="newEventDesc" class="control-input min-h-[60px] resize-y !mb-0" placeholder="Short Description..."></textarea>
 
                         <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2 mt-1" onclick="addEventUI()">
-                            <i data-lucide="plus" class="w-4 h-4 text-purple-400"></i> Add New Event
+                            <i data-lucide="plus" class="w-4 h-4 text-white/80"></i> Add New Event
                         </button>
                     </div>
                 </div>
 
                 <!-- Security -->
                 <div class="mb-8">
-                    <label class="block mb-3.5 text-purple-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Security Settings
                     </label>
                     <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep current)">
@@ -351,12 +354,12 @@
     <div id="gateModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="display: none;">
         <div id="gateBackdrop" class="absolute inset-0 bg-black/75 backdrop-blur-md" onclick="hideGate()"></div>
 
-        <div id="gateCard" class="relative w-full max-w-sm night-glass-card rounded-[32px] p-8 flex flex-col items-center text-center shadow-2xl border-purple-400/40 z-10">
+        <div id="gateCard" class="relative w-full max-w-sm night-glass-card rounded-[32px] p-8 flex flex-col items-center text-center shadow-2xl border-white/40 z-10">
             <div class="logo-box mb-5">
                 <img id="adminGateImg" src="https://i.imgur.com/p2qZOL5.png" alt="Admin Gate" class="w-16 h-16 object-contain relative z-10 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
             </div>
             <h3 class="text-2xl font-bold mb-1 text-white tracking-tight">Admin Access</h3>
-            <p class="text-purple-200/70 text-xs mb-6">Authenticate to access portal controls</p>
+            <p class="text-white/70 text-xs mb-6">Authenticate to access portal controls</p>
 
             <input type="email" id="adminEmail" class="control-input text-center" placeholder="Admin Email">
             <input type="password" id="adminPass" class="control-input text-center mb-6" placeholder="Password" onkeyup="if(event.key==='Enter') verifyAdmin()">
@@ -371,22 +374,22 @@
     <div id="eventsModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="display: none;">
         <div id="eventsBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="hideEvents()"></div>
 
-        <div id="eventsCard" class="relative w-full max-w-2xl max-h-[85vh] night-glass-card rounded-[32px] p-6 sm:p-10 flex flex-col shadow-[0_0_80px_rgba(168,85,247,0.3)] border-purple-400/40 z-10">
-            <div class="flex justify-between items-center mb-6 border-b border-purple-500/20 pb-4">
+        <div id="eventsCard" class="relative w-full max-w-2xl max-h-[85vh] night-glass-card rounded-[32px] p-6 sm:p-10 flex flex-col shadow-[0_0_80px_rgba(255, 255, 255,0.3)] border-white/40 z-10">
+            <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-400/30">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-purple-300"></i>
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
+                        <i data-lucide="calendar-days" class="w-5 h-5 text-white/65"></i>
                     </div>
                     <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Upcoming Events</h3>
                 </div>
-                <button class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-900/50 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-600/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" onclick="hideEvents()">
+                <button class="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 border border-white/30 text-white/70 hover:text-white hover:bg-white/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" onclick="hideEvents()">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
             <div id="publicEventsList" class="flex-1 overflow-y-auto pr-2 flex flex-col gap-4">
                 <!-- Events injected here -->
             </div>
-            <div class="mt-6 pt-5 border-t border-purple-500/20 flex justify-center flex-shrink-0">
+            <div class="mt-6 pt-5 border-t border-white/20 flex justify-center flex-shrink-0">
                 <a href="https://cabgcu.github.io/calendar/" target="_blank" rel="noopener" class="night-btn-primary px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
                     <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> Open Full Calendar
                 </a>
@@ -620,20 +623,20 @@
         function renderAdminLinks() {
             const mgr = document.getElementById('link-list-manager');
             mgr.innerHTML = state.config.links.map((l, i) => `
-                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-purple-400/40">
+                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-white/40">
                     <div class="flex items-center gap-2">
-                        <input type="text" class="w-10 bg-slate-900/80 border border-purple-400/30 text-white rounded-lg text-center py-1.5 outline-none focus:border-purple-400 text-xs" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
-                        <span class="flex-1 text-xs text-purple-100 font-medium truncate pl-1">${escapeHTML(l.title)}</span>
+                        <input type="text" class="w-10 bg-black/80 border border-white/30 text-white rounded-lg text-center py-1.5 outline-none focus:border-white/80 text-xs" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
+                        <span class="flex-1 text-xs text-white/90 font-medium truncate pl-1">${escapeHTML(l.title)}</span>
                         <div class="flex gap-1 shrink-0">
-                            <button class="bg-slate-800/80 hover:bg-slate-700 text-purple-300 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
-                            <button class="bg-slate-800/80 hover:bg-slate-700 text-purple-300 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, 1)" ${i === state.config.links.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+                            <button class="bg-white/10 hover:bg-white/20 text-white/65 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
+                            <button class="bg-white/10 hover:bg-white/20 text-white/65 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, 1)" ${i === state.config.links.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
                         </div>
                         <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110" onclick="removeLink(${i})" title="Delete">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <div class="text-[10px] text-purple-300/70 font-semibold ml-[48px] uppercase tracking-wider flex items-center">
-                        <i data-lucide="mouse-pointer-click" class="w-3 h-3 mr-1 text-purple-400"></i> ${l.clicks || 0} total clicks
+                    <div class="text-[10px] text-white/70 font-semibold ml-[48px] uppercase tracking-wider flex items-center">
+                        <i data-lucide="mouse-pointer-click" class="w-3 h-3 mr-1 text-white/80"></i> ${l.clicks || 0} total clicks
                     </div>
                 </div>
             `).join('');
@@ -670,23 +673,23 @@
         function renderAdminEvents() {
             const mgr = document.getElementById('event-list-manager');
             if (state.config.events.length === 0) {
-                mgr.innerHTML = `<div class="text-center p-3 text-purple-300/50 text-xs italic border border-dashed border-purple-400/20 rounded-xl">No events scheduled.</div>`;
+                mgr.innerHTML = `<div class="text-center p-3 text-white/50 text-xs italic border border-dashed border-white/20 rounded-xl">No events scheduled.</div>`;
                 return;
             }
 
             const sortedEvents = [...state.config.events].sort((a, b) => new Date(a.date) - new Date(b.date));
 
             mgr.innerHTML = sortedEvents.map((ev, i) => `
-                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-purple-400/40">
+                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-white/40">
                     <div class="flex justify-between items-start">
                         <div class="flex-1 min-w-0 pr-2">
                             <h4 class="text-sm font-bold text-white truncate">${escapeHTML(ev.title)}</h4>
-                            <div class="text-xs text-purple-300/80 mt-1 flex flex-wrap items-center gap-2">
+                            <div class="text-xs text-white/80 mt-1 flex flex-wrap items-center gap-2">
                                 <span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDateDisplay(ev.date)}</span>
-                                ${ev.startTime ? `<span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="clock" class="w-3 h-3 ml-1 text-purple-400"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</span>` : ''}
+                                ${ev.startTime ? `<span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="clock" class="w-3 h-3 ml-1 text-white/80"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</span>` : ''}
                             </div>
                         </div>
-                        <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110 bg-slate-900/50 rounded-lg" onclick="removeEvent('${ev.id}')" title="Delete Event">
+                        <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110 bg-black/50 rounded-lg" onclick="removeEvent('${ev.id}')" title="Delete Event">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -854,9 +857,9 @@
             if (upcomingEvents.length === 0) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center p-10 text-center opacity-70">
-                        <i data-lucide="calendar-x" class="w-12 h-12 text-purple-400 mb-4 opacity-50"></i>
+                        <i data-lucide="calendar-x" class="w-12 h-12 text-white/80 mb-4 opacity-50"></i>
                         <p class="text-white font-medium">No upcoming events right now.</p>
-                        <p class="text-xs text-purple-200 mt-2">Check back later for new activities!</p>
+                        <p class="text-xs text-white/70 mt-2">Check back later for new activities!</p>
                     </div>`;
                 lucide.createIcons();
                 return;
@@ -869,29 +872,29 @@
 
                 let timeDisplay = '';
                 if (ev.startTime) {
-                    timeDisplay = `<div class="flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="clock" class="w-3.5 h-3.5 text-purple-400"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</div>`;
+                    timeDisplay = `<div class="flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="clock" class="w-3.5 h-3.5 text-white/80"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</div>`;
                 }
 
                 return `
-                <div class="night-glass-card-subtle p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center group hover:border-purple-400/50 transition-all duration-300">
-                    <div class="flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-400/30 shadow-inner group-hover:scale-105 transition-transform">
-                        <span class="text-[10px] font-bold text-purple-300 tracking-wider -mb-1">${month}</span>
+                <div class="night-glass-card-subtle p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center group hover:border-white/50 transition-all duration-300">
+                    <div class="flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/10 border border-white/30 shadow-inner group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] font-bold text-white/65 tracking-wider -mb-1">${month}</span>
                         <span class="text-xl sm:text-2xl font-extrabold text-white">${day}</span>
                     </div>
                     <div class="flex-1 min-w-0">
                         <h4 class="text-base sm:text-lg font-bold text-white mb-1 leading-tight">${escapeHTML(ev.title)}</h4>
-                        <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs font-medium text-purple-200/80 mb-2">
+                        <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs font-medium text-white/80 mb-2">
                             ${timeDisplay}
-                            ${ev.location ? `<div class="flex items-center gap-1.5 truncate"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-purple-400"></i> ${escapeHTML(ev.location)}</div>` : ''}
+                            ${ev.location ? `<div class="flex items-center gap-1.5 truncate"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-white/80"></i> ${escapeHTML(ev.location)}</div>` : ''}
                         </div>
-                        ${ev.desc ? `<p class="text-xs text-purple-200/60 leading-relaxed">${escapeHTML(ev.desc)}</p>` : ''}
+                        ${ev.desc ? `<p class="text-xs text-white/60 leading-relaxed">${escapeHTML(ev.desc)}</p>` : ''}
                     </div>
                     <div class="flex-shrink-0 flex flex-row sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                        <a href="${generateGoogleCalLink(ev)}" target="_blank" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900/60 hover:bg-slate-800 border border-purple-400/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
-                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-purple-400 group-hover/btn:text-white transition-colors"></i> Google Cal
+                        <a href="${generateGoogleCalLink(ev)}" target="_blank" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-black/60 hover:bg-white/10 border border-white/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
+                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-white/80 group-hover/btn:text-white transition-colors"></i> Google Cal
                         </a>
-                        <button onclick="downloadICS('${escapeHTML(ev.title)}', '${ev.date}', '${ev.startTime}', '${ev.endTime}', '${escapeHTML(ev.location)}', '${escapeHTML(ev.desc)}')" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900/60 hover:bg-slate-800 border border-purple-400/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
-                            <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400 group-hover/btn:text-white transition-colors"></i> Apple (.ics)
+                        <button onclick="downloadICS('${escapeHTML(ev.title)}', '${ev.date}', '${ev.startTime}', '${ev.endTime}', '${escapeHTML(ev.location)}', '${escapeHTML(ev.desc)}')" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-black/60 hover:bg-white/10 border border-white/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-white/80 group-hover/btn:text-white transition-colors"></i> Apple (.ics)
                         </button>
                     </div>
                 </div>
