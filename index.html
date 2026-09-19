@@ -179,7 +179,7 @@
             </button>
 
             <div class="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-6 pb-6">
-                <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Canyon Activities Board Logo" class="card-logo h-16 sm:h-20 w-auto mb-3 drop-shadow-2xl object-contain">
+                <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Canyon Activities Board Logo" class="card-logo h-24 sm:h-28 w-auto mb-3 drop-shadow-2xl object-contain">
                 <h1 id="portalName" class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white mb-2 text-center drop-shadow-lg">Canyon Activities Board</h1>
                 <p id="portalBio" class="text-white/90 text-sm text-center mb-2 max-w-sm leading-snug drop-shadow-md whitespace-pre-wrap"></p>
                 <a href="#" id="portalHandle" target="_blank" class="text-gray-300 text-sm md:text-base font-medium mb-4 tracking-wide drop-shadow-sm" style="display:none;">@cabgcu</a>
@@ -199,11 +199,6 @@
         <div id="portalView" class="view active flex-col items-center px-6 pt-6">
                 <!-- Quick Access Links -->
                 <div class="w-full max-w-[320px] flex flex-col gap-3 pb-8 mx-auto">
-                    <button type="button" onclick="showEvents()" class="w-full bg-black/40 hover:bg-black/60 border border-white/10 text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 backdrop-blur-xl shadow-lg text-center flex justify-center items-center relative group">
-                        <span>Upcoming Events</span>
-                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all absolute right-6"></i>
-                    </button>
-
                     <div id="linksContainer" class="w-full flex flex-col gap-3"></div>
                 </div>
 
@@ -386,7 +381,7 @@
                 portalName: "Canyon Activities Board",
                 portalBio: "",
                 socialHandle: "@cabgcu",
-                tiktokHandle: "",
+                tiktokHandle: "@cabgcu",
                 avatarUrl: "",
                 bgVideoUrl: "",
                 links: [],
