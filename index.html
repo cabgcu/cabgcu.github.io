@@ -103,18 +103,32 @@
         .night-btn-primary .loader { border-color: #fff; border-bottom-color: transparent; }
 
         .night-btn-link {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+            background-color: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(40px) saturate(160%);
+            -webkit-backdrop-filter: blur(40px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .night-btn-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(20, 20, 20, 0.6);
+            border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.35);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom link-pill buttons on the public portal (one per admin-added link) */
+        .night-link-pill {
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+            background-color: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(40px) saturate(160%);
+            -webkit-backdrop-filter: blur(40px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .night-link-pill:hover {
+            background-color: rgba(20, 20, 20, 0.6);
         }
 
         /* INPUT STYLES (admin panel) */
@@ -511,7 +525,7 @@
             }
 
             document.getElementById('linksContainer').innerHTML = state.config.links.map((link, i) => `
-                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="w-full bg-black/40 hover:bg-black/60 border border-white/10 text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 backdrop-blur-xl shadow-lg text-center flex justify-center items-center relative group">
+                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="w-full night-link-pill text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 shadow-lg text-center flex justify-center items-center relative group">
                     <span class="truncate">${link.icon ? escapeHTML(link.icon) + ' ' : ''}${escapeHTML(link.title)}</span>
                     <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all absolute right-6"></i>
                 </a>
