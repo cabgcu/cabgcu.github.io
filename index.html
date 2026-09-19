@@ -184,26 +184,25 @@
 
     <main class="w-full max-w-md min-h-[100dvh] relative flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar bg-black md:rounded-3xl md:my-8 border-x border-white/5 md:border-y shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
 
-        <!-- Hero video -->
-        <div class="relative w-full h-[60vh] sm:h-[65vh] shrink-0">
-            <video id="bgVideo" class="w-full h-full object-cover object-center opacity-90" autoplay loop muted playsinline>
+        <!-- Hero video (persistent header: video + branding overlay live in the SAME box, -->
+        <!-- so the overlay always paints above the video regardless of z-index quirks) -->
+        <div class="relative w-full h-[60vh] sm:h-[65vh] shrink-0 overflow-hidden">
+            <video id="bgVideo" class="absolute inset-0 w-full h-full object-cover object-center opacity-90" autoplay loop muted playsinline>
                 <source id="bgVideoSource" src="https://i.imgur.com/qY8V0Ou.mp4" type="video/mp4">
             </video>
             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
 
-            <button type="button" onclick="checkAuthAndShowAdmin()" class="absolute top-6 right-6 z-30 w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-900/50 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-600/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" title="Admin Settings">
+            <button type="button" onclick="checkAuthAndShowAdmin()" class="absolute top-6 right-6 z-20 w-10 h-10 flex items-center justify-center rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-black/60 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" title="Admin Settings">
                 <i data-lucide="settings" class="w-4 h-4"></i>
             </button>
-        </div>
 
-        <!-- PORTAL VIEW -->
-        <div id="portalView" class="view active flex-col items-center px-6 -mt-48 relative z-10">
+            <div class="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-6 pb-6">
                 <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Canyon Activities Board Logo" class="card-logo h-16 sm:h-20 w-auto mb-3 drop-shadow-2xl object-contain">
                 <h1 id="portalName" class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white mb-2 text-center drop-shadow-lg">Canyon Activities Board</h1>
                 <p id="portalBio" class="text-white/90 text-sm text-center mb-2 max-w-sm leading-snug drop-shadow-md whitespace-pre-wrap"></p>
                 <a href="#" id="portalHandle" target="_blank" class="text-gray-300 text-sm md:text-base font-medium mb-4 tracking-wide drop-shadow-sm" style="display:none;">@cabgcu</a>
 
-                <div class="flex items-center justify-center gap-4 w-full mb-2">
+                <div class="flex items-center justify-center gap-4 w-full">
                     <a href="#" id="instagramLink" target="_blank" rel="noopener" style="display:none;" class="text-white hover:text-gray-300 transition-colors transform hover:scale-110 flex items-center justify-center w-10 h-10" aria-label="Instagram">
                         <i class="fa-brands fa-instagram text-2xl"></i>
                     </a>
@@ -211,10 +210,14 @@
                         <i class="fa-brands fa-tiktok text-xl"></i>
                     </a>
                 </div>
+            </div>
+        </div>
 
+        <!-- PORTAL VIEW -->
+        <div id="portalView" class="view active flex-col items-center px-6 pt-6">
                 <!-- Quick Access Links -->
-                <div class="w-full max-w-[320px] flex flex-col gap-3 mt-6 pb-8 mx-auto">
-                    <button type="button" onclick="showEvents()" class="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 backdrop-blur-md shadow-lg text-center flex justify-center items-center relative group">
+                <div class="w-full max-w-[320px] flex flex-col gap-3 pb-8 mx-auto">
+                    <button type="button" onclick="showEvents()" class="w-full bg-black/40 hover:bg-black/60 border border-white/10 text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 backdrop-blur-xl shadow-lg text-center flex justify-center items-center relative group">
                         <span>Upcoming Events</span>
                         <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all absolute right-6"></i>
                     </button>
@@ -222,7 +225,7 @@
                     <div id="linksContainer" class="w-full flex flex-col gap-3"></div>
                 </div>
 
-                <footer class="text-purple-300/50 text-[11px] tracking-wide w-full flex justify-center items-center pb-6">
+                <footer class="text-white/40 text-[11px] tracking-wide w-full flex justify-center items-center pb-6">
                     <p>© <span id="year"></span> Canyon Activities Board</p>
                 </footer>
             </div>
@@ -527,7 +530,7 @@
             }
 
             document.getElementById('linksContainer').innerHTML = state.config.links.map((link, i) => `
-                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 backdrop-blur-md shadow-lg text-center flex justify-center items-center relative group">
+                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="w-full bg-black/40 hover:bg-black/60 border border-white/10 text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 backdrop-blur-xl shadow-lg text-center flex justify-center items-center relative group">
                     <span class="truncate">${link.icon ? escapeHTML(link.icon) + ' ' : ''}${escapeHTML(link.title)}</span>
                     <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all absolute right-6"></i>
                 </a>
