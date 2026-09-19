@@ -84,19 +84,23 @@
 
         /* NIGHT GLASS BUTTONS (admin panel) */
         .night-btn-primary {
-            background: #ffffff;
-            color: #000000;
-            box-shadow: 0 15px 35px rgba(255, 255, 255, 0.25);
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+            background-color: rgba(10, 10, 10, 0.5);
+            backdrop-filter: blur(40px) saturate(160%);
+            -webkit-backdrop-filter: blur(40px) saturate(160%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
             transition: all 0.3s ease;
         }
 
         .night-btn-primary:hover {
             transform: translateY(-2px);
-            background: #e5e5e5;
-            box-shadow: 0 20px 45px rgba(255, 255, 255, 0.4);
+            background-color: rgba(20, 20, 20, 0.6);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
         }
 
-        .night-btn-primary .loader { border-color: #000; border-bottom-color: transparent; }
+        .night-btn-primary .loader { border-color: #fff; border-bottom-color: transparent; }
 
         .night-btn-link {
             background: rgba(0, 0, 0, 0.6);
