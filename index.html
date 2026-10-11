@@ -153,8 +153,6 @@
                 linear-gradient(to top, var(--bg) 0%, rgba(5, 5, 7, 0.75) 30%, rgba(5, 5, 7, 0.2) 65%, rgba(5, 5, 7, 0.55) 100%);
         }
         .hero .wrap { padding-top: 120px; padding-bottom: 72px; }
-        .hero-logo { height: 92px; width: auto; margin-bottom: 26px; filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.7)); animation: float 4.5s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
         .eyebrow {
             display: inline-flex; align-items: center; gap: 8px;
             font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2);
@@ -388,7 +386,6 @@
         .reveal.in { opacity: 1; transform: none; }
         @media (prefers-reduced-motion: reduce) {
             .reveal { opacity: 1; transform: none; transition: none; }
-            .hero-logo { animation: none; }
             html { scroll-behavior: auto; }
         }
 
@@ -417,7 +414,6 @@
             .moments-grid.simple[data-count="3"] .moment:first-child { grid-column: span 2; }
             .explore-card { min-height: 0; }
             .explore-card h3 { margin-top: 28px; }
-            .hero-logo { height: 72px; }
             .hero-actions .btn { flex: 1 1 auto; }
             .foot-cols { gap: 36px; }
         }
@@ -465,7 +461,6 @@
                 <source src="https://i.imgur.com/qY8V0Ou.mp4" type="video/mp4">
             </video>
             <div class="wrap">
-                <img id="heroLogo" class="hero-logo" src="https://i.imgur.com/p2qZOL5.png" alt="Canyon Activities Board logo">
                 <div class="eyebrow"><span class="dot"></span> Grand Canyon University</div>
                 <h1>Canyon Activities <span class="serif">Board</span></h1>
                 <p class="lead" id="heroBio">Student-run events, markets and moments that make GCU feel like home. Find out what's happening and get involved.</p>
