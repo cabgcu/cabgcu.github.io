@@ -1,1006 +1,913 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#000000">
     <title>Canyon Activities Board</title>
+    <meta name="description" content="Canyon Activities Board at Grand Canyon University — upcoming events, the Student Market, event feedback and everything CAB in one place.">
     <link rel="icon" type="image/png" href="https://i.imgur.com/wR5HGeC.png">
     <link rel="apple-touch-icon" href="https://i.imgur.com/wR5HGeC.png">
 
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- GSAP for Smooth Animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client (same project the portal admin and calendar read from) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.441.0/dist/umd/lucide.min.js"></script>
 
     <!-- Font Awesome (brand icons for socials) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        night: {
-                            950: '#020617',
-                            900: '#0f172a',
-                            800: '#1e293b'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Google Fonts: Inter + Instrument Serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg: #050507;
+            --ink: #ffffff;
+            --ink-2: rgba(255, 255, 255, 0.72);
+            --ink-3: rgba(255, 255, 255, 0.5);
+            --line: rgba(255, 255, 255, 0.10);
+            --line-strong: rgba(255, 255, 255, 0.22);
+            --glass: rgba(18, 18, 22, 0.55);
+            --glass-strong: rgba(14, 14, 18, 0.78);
+            --accent: #8b5cf6;
+            --accent-2: #2563eb;
+            --radius: 24px;
+            --wrap: 1180px;
+            --serif: "Instrument Serif", Georgia, serif;
+            --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        html { height: 100%; -webkit-text-size-adjust: 100%; }
-
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--bg); color-scheme: dark; }
         body {
-            font-family: "Inter", sans-serif;
-            background: #000000;
-            padding-bottom: env(safe-area-inset-bottom);
+            margin: 0;
+            font-family: var(--sans);
+            color: var(--ink);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
+        ::selection { background: rgba(255, 255, 255, 0.25); }
+        a { color: inherit; text-decoration: none; }
+        img { max-width: 100%; display: block; }
+        [data-lucide] { width: 18px; height: 18px; flex-shrink: 0; }
 
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0, 0, 0,0.5); }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255,0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255,0.6); }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 10px; }
 
-        /* Security Input Masking */
-        .no-save-pass { -webkit-text-security: disc !important; text-security: disc !important; }
+        .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
+        .serif { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: 0; }
 
-        /* NIGHT GLASS CARDS (admin panel) */
-        .night-glass-card {
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.65), 0 0 80px rgba(255, 255, 255, 0.25);
+        /* Fixed backdrop: dashboard artwork under a dark wash */
+        .backdrop {
+            position: fixed; inset: 0; z-index: -2; pointer-events: none;
+            background: #0b0b0e url('https://i.imgur.com/APGH0Wv.png') center / cover no-repeat;
+        }
+        .backdrop::after {
+            content: ''; position: absolute; inset: 0;
+            background:
+                radial-gradient(60% 50% at 80% 0%, rgba(139, 92, 246, 0.16), transparent 70%),
+                radial-gradient(50% 40% at 0% 60%, rgba(37, 99, 235, 0.12), transparent 70%),
+                rgba(5, 5, 7, 0.82);
         }
 
-        .night-glass-card-subtle {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+        /* ── NAV ── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            padding: 14px 0;
+            transition: background 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
+            border-bottom: 1px solid transparent;
+        }
+        .nav.scrolled {
+            background: rgba(5, 5, 7, 0.72);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            border-bottom-color: var(--line);
+            padding: 10px 0;
+        }
+        .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+        .brand img { height: 34px; width: auto; filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)); }
+        .nav-links { display: flex; align-items: center; gap: 4px; }
+        .nav-links a {
+            padding: 9px 14px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--ink-2);
+            transition: color 0.2s, background 0.2s;
+        }
+        .nav-links a:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .nav-cta { display: flex; align-items: center; gap: 8px; }
+        .menu-btn {
+            display: none; width: 42px; height: 42px; border-radius: 14px; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); color: #fff; cursor: pointer;
         }
 
-        .logo-box { position: relative; display: flex; justify-content: center; align-items: center; }
+        .mobile-menu {
+            position: fixed; inset: 0; z-index: 49; display: none;
+            background: rgba(5, 5, 7, 0.94);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            padding: 96px 24px 32px; flex-direction: column; gap: 6px;
+        }
+        .mobile-menu.open { display: flex; }
+        .mobile-menu a {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 4px; font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+            border-bottom: 1px solid var(--line);
+        }
+        .mobile-menu a [data-lucide] { color: var(--ink-3); }
 
-        /* NIGHT GLASS BUTTONS (admin panel) */
-        .night-btn-primary {
-            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
-            background-color: rgba(10, 10, 10, 0.5);
-            backdrop-filter: blur(40px) saturate(160%);
-            -webkit-backdrop-filter: blur(40px) saturate(160%);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
-            transition: all 0.3s ease;
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 13px 22px; border-radius: 999px; font: 600 14px var(--sans);
+            border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+            transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-light { background: #fff; color: #000; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.12); }
+        .btn-light:hover { box-shadow: 0 16px 40px rgba(255, 255, 255, 0.2); }
+        .btn-glass {
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            background-color: rgba(10, 10, 12, 0.5);
+            backdrop-filter: blur(30px) saturate(160%); -webkit-backdrop-filter: blur(30px) saturate(160%);
+            border-color: var(--line-strong); color: #fff;
+        }
+        .btn-glass:hover { border-color: rgba(255, 255, 255, 0.4); background-color: rgba(24, 24, 28, 0.6); }
+        .btn-sm { padding: 9px 16px; font-size: 13px; }
+        .btn [data-lucide] { width: 16px; height: 16px; }
+
+        /* ── HERO ── */
+        .hero {
+            position: relative; min-height: 100svh; display: flex; align-items: flex-end;
+            overflow: hidden; isolation: isolate;
+        }
+        .hero video {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; opacity: 0.85;
+        }
+        .hero::after {
+            content: ''; position: absolute; inset: 0; z-index: -1;
+            background:
+                linear-gradient(to top, var(--bg) 0%, rgba(5, 5, 7, 0.75) 30%, rgba(5, 5, 7, 0.2) 65%, rgba(5, 5, 7, 0.55) 100%);
+        }
+        .hero .wrap { padding-top: 120px; padding-bottom: 72px; }
+        .hero-logo { height: 92px; width: auto; margin-bottom: 26px; filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.7)); animation: float 4.5s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+        .eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2);
+        }
+        .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 12px #4ade80; }
+        .hero h1 {
+            margin: 14px 0 18px; font-size: clamp(44px, 8.4vw, 112px); line-height: 0.95; font-weight: 800; letter-spacing: -0.045em;
+            max-width: 13ch;
+        }
+        .hero h1 .serif { font-size: 1.08em; letter-spacing: -0.02em; }
+        .hero p.lead { max-width: 520px; color: var(--ink-2); font-size: clamp(16px, 1.6vw, 19px); line-height: 1.55; margin: 0 0 30px; white-space: pre-wrap; }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+        .next-up {
+            margin-top: 40px; display: none; align-items: center; gap: 14px; max-width: 460px;
+            padding: 12px 18px 12px 12px; border-radius: 20px;
+            background: var(--glass); border: 1px solid var(--line);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            transition: border-color 0.25s, transform 0.25s;
+        }
+        .next-up:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+        .next-up.show { display: flex; }
+        .next-up .mini-date {
+            width: 50px; height: 50px; border-radius: 14px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.1); border: 1px solid var(--line-strong);
+        }
+        .mini-date b { font-size: 19px; line-height: 1; }
+        .mini-date small { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink-2); }
+        .next-up .meta { min-width: 0; }
+        .next-up .label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+        .next-up .title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .next-up .sub { font-size: 12px; color: var(--ink-2); }
+        .next-up > [data-lucide] { margin-left: auto; color: var(--ink-3); }
+
+        .scroll-hint {
+            position: absolute; right: 24px; bottom: 28px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); writing-mode: vertical-rl;
+        }
+        .scroll-hint::after { content: ''; width: 1px; height: 48px; background: linear-gradient(var(--ink-3), transparent); }
+
+        /* ── SECTIONS ── */
+        section.block { padding: 96px 0; position: relative; }
+        .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 40px; flex-wrap: wrap; }
+        .section-head h2 { margin: 10px 0 0; font-size: clamp(34px, 5vw, 60px); line-height: 1; letter-spacing: -0.035em; font-weight: 800; }
+        .section-head p { margin: 14px 0 0; color: var(--ink-2); max-width: 520px; line-height: 1.6; }
+
+        .glass {
+            background: var(--glass); border: 1px solid var(--line); border-radius: var(--radius);
+            backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%);
         }
 
-        .night-btn-primary:hover {
-            transform: translateY(-2px);
-            background-color: rgba(20, 20, 20, 0.6);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+        /* ── EVENTS ── */
+        .events-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .event-card {
+            padding: 22px; display: flex; flex-direction: column; gap: 16px; min-height: 230px;
+            transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+        .event-card:hover { transform: translateY(-4px); border-color: var(--line-strong); background: rgba(24, 24, 30, 0.62); }
+        .event-card.featured { grid-column: span 2; background: linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(37, 99, 235, 0.08) 60%, rgba(18, 18, 22, 0.55)); }
+        .event-top { display: flex; align-items: center; gap: 14px; }
+        .date-badge {
+            width: 62px; height: 62px; border-radius: 18px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line-strong);
+        }
+        .date-badge small { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--ink-2); }
+        .date-badge b { font-size: 24px; font-weight: 800; line-height: 1.05; }
+        .event-when { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+        .pill-soon { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 10px; background: rgba(74, 222, 128, 0.12); color: #4ade80; letter-spacing: 0.08em; }
+        .event-card h3 { margin: 0; font-size: 21px; letter-spacing: -0.02em; line-height: 1.2; }
+        .event-card.featured h3 { font-size: clamp(24px, 3vw, 34px); }
+        .event-info { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+        .event-info span { display: inline-flex; align-items: center; gap: 6px; }
+        .event-info [data-lucide] { width: 14px; height: 14px; color: var(--ink-3); }
+        .event-desc { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .event-actions { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+        .chip-btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px;
+            background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line-strong); color: #fff;
+            font: 600 12px var(--sans); cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .chip-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.4); }
+        .chip-btn [data-lucide] { width: 14px; height: 14px; }
+
+        .state-box { grid-column: 1 / -1; padding: 56px 24px; text-align: center; color: var(--ink-2); }
+        .state-box [data-lucide] { width: 40px; height: 40px; color: var(--ink-3); margin: 0 auto 14px; display: block; }
+        .state-box h3 { margin: 0 0 6px; color: #fff; font-size: 18px; }
+        .state-box p { margin: 0 0 20px; font-size: 14px; }
+        .skeleton { min-height: 230px; position: relative; overflow: hidden; }
+        .skeleton::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.05) 50%, transparent 80%);
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+        /* ── EXPLORE (the CAB sites) ── */
+        .explore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .explore-card {
+            position: relative; padding: 28px; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;
+            transition: transform 0.35s ease, border-color 0.35s ease;
+        }
+        .explore-card:hover { transform: translateY(-6px); border-color: var(--line-strong); }
+        .explore-card .glow {
+            position: absolute; width: 260px; height: 260px; border-radius: 50%; right: -90px; top: -90px; filter: blur(60px); opacity: 0.35;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .explore-card:hover .glow { opacity: 0.6; transform: scale(1.1); }
+        .explore-card .icon-wrap {
+            width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line-strong); margin-bottom: auto;
+        }
+        .explore-card .icon-wrap [data-lucide] { width: 24px; height: 24px; }
+        .explore-card .num { position: absolute; top: 28px; right: 28px; font-size: 12px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.1em; }
+        .explore-card h3 { margin: 40px 0 8px; font-size: 26px; letter-spacing: -0.025em; }
+        .explore-card p { margin: 0 0 22px; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+        .explore-card .go { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+        .explore-card .go [data-lucide] { transition: transform 0.25s ease; }
+        .explore-card:hover .go [data-lucide] { transform: translateX(4px); }
+
+        /* ── FEATURE BANDS (market + survey) ── */
+        .band {
+            display: grid; grid-template-columns: 1.1fr 0.9fr; overflow: hidden; border-radius: 32px;
+        }
+        .band-copy { padding: clamp(32px, 5vw, 64px); display: flex; flex-direction: column; justify-content: center; }
+        .band-copy h2 { margin: 12px 0 16px; font-size: clamp(34px, 4.6vw, 58px); line-height: 1; letter-spacing: -0.035em; font-weight: 800; }
+        .band-copy p { margin: 0 0 28px; color: var(--ink-2); line-height: 1.65; max-width: 480px; }
+        .band-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        .band-art {
+            position: relative; min-height: 360px;
+            background: #0b0b0e url('https://i.imgur.com/APGH0Wv.png') center / cover no-repeat;
+        }
+        .band-art::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 14, 18, 0.95), rgba(14, 14, 18, 0.15) 60%); }
+        .band-art img { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 46%; width: auto; filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.8)); }
+        .steps { list-style: none; padding: 0; margin: 0 0 30px; display: grid; gap: 12px; }
+        .steps li { display: flex; gap: 14px; align-items: flex-start; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+        .steps li b { color: #fff; display: block; font-size: 15px; margin-bottom: 2px; }
+        .steps .n {
+            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--line-strong); color: #fff;
         }
 
-        .night-btn-primary .loader { border-color: #fff; border-bottom-color: transparent; }
+        .survey-band {
+            padding: clamp(36px, 6vw, 80px); text-align: center; border-radius: 32px; position: relative; overflow: hidden;
+            background: linear-gradient(160deg, rgba(37, 99, 235, 0.18), rgba(139, 92, 246, 0.14) 50%, rgba(18, 18, 22, 0.6));
+        }
+        .survey-band h2 { margin: 12px auto 16px; font-size: clamp(36px, 6vw, 76px); line-height: 0.98; letter-spacing: -0.04em; font-weight: 800; max-width: 14ch; }
+        .survey-band p { margin: 0 auto 30px; color: var(--ink-2); max-width: 520px; line-height: 1.6; }
+        .stars { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; color: #fbbf24; }
+        .stars [data-lucide] { width: 22px; height: 22px; fill: #fbbf24; }
 
-        .night-btn-link {
-            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
-            background-color: rgba(10, 10, 10, 0.5);
-            backdrop-filter: blur(40px) saturate(160%);
-            -webkit-backdrop-filter: blur(40px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* ── CONNECT ── */
+        .connect { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 16px; align-items: stretch; }
+        .connect-social { padding: 32px; display: flex; flex-direction: column; }
+        .connect-social h3 { margin: 0 0 8px; font-size: 26px; letter-spacing: -0.02em; }
+        .connect-social p { margin: 0 0 24px; color: var(--ink-2); line-height: 1.6; font-size: 14px; }
+        .social-row { display: grid; gap: 10px; margin-top: auto; }
+        .social {
+            display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 18px;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line); transition: border-color 0.2s, background 0.2s;
+        }
+        .social:hover { border-color: var(--line-strong); background: rgba(255, 255, 255, 0.05); }
+        .social i.fa-brands { font-size: 22px; width: 26px; text-align: center; }
+        .social span { font-weight: 600; font-size: 15px; }
+        .social small { display: block; color: var(--ink-3); font-size: 12px; font-weight: 500; }
+        .social > [data-lucide] { margin-left: auto; color: var(--ink-3); }
+
+        .links-panel { padding: 32px; }
+        .links-panel h3 { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+        .links-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .link-pill {
+            display: flex; align-items: center; gap: 10px; padding: 15px 18px; border-radius: 16px; min-width: 0;
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)); border: 1px solid var(--line);
+            font-weight: 600; font-size: 14px; transition: transform 0.25s, border-color 0.25s;
+        }
+        .link-pill:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+        .link-pill .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .link-pill [data-lucide] { width: 15px; height: 15px; color: var(--ink-3); }
+
+        /* ── FOOTER ── */
+        footer { padding: 64px 0 calc(40px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); margin-top: 40px; }
+        .foot { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+        .foot .brand img { height: 44px; }
+        .foot p { color: var(--ink-3); font-size: 13px; margin: 14px 0 0; max-width: 300px; line-height: 1.6; }
+        .foot-cols { display: flex; gap: 56px; flex-wrap: wrap; }
+        .foot-col h4 { margin: 0 0 14px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+        .foot-col a { display: block; color: var(--ink-2); font-size: 14px; padding: 5px 0; transition: color 0.2s; }
+        .foot-col a:hover { color: #fff; }
+        .foot-bottom { margin-top: 48px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--ink-3); font-size: 12px; }
+        .foot-bottom a:hover { color: #fff; }
+
+        /* Reveal on scroll */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+        .reveal.in { opacity: 1; transform: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+            .hero-logo { animation: none; }
+            html { scroll-behavior: auto; }
         }
 
-        .night-btn-link:hover {
-            background-color: rgba(20, 20, 20, 0.6);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        /* ── RESPONSIVE ── */
+        @media (max-width: 960px) {
+            .events-grid, .explore-grid { grid-template-columns: 1fr 1fr; }
+            .event-card.featured { grid-column: 1 / -1; }
+            .explore-card:last-child { grid-column: 1 / -1; }
+            .band, .connect { grid-template-columns: 1fr; }
+            .band-art { min-height: 240px; order: -1; }
+            .band-art::before { background: linear-gradient(0deg, rgba(14, 14, 18, 0.95), rgba(14, 14, 18, 0.15) 70%); }
         }
-
-        /* Custom link-pill buttons on the public portal (one per admin-added link) */
-        .night-link-pill {
-            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
-            background-color: rgba(10, 10, 10, 0.5);
-            backdrop-filter: blur(40px) saturate(160%);
-            -webkit-backdrop-filter: blur(40px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.10);
+        @media (max-width: 760px) {
+            .nav-links, .nav-cta .btn { display: none; }
+            .menu-btn { display: flex; }
+            .scroll-hint { display: none; }
+            section.block { padding: 72px 0; }
         }
-
-        .night-link-pill:hover {
-            background-color: rgba(20, 20, 20, 0.6);
+        @media (max-width: 620px) {
+            .wrap { padding: 0 16px; }
+            .events-grid, .explore-grid, .links-list { grid-template-columns: 1fr; }
+            .explore-card { min-height: 0; }
+            .explore-card h3 { margin-top: 28px; }
+            .hero-logo { height: 72px; }
+            .hero-actions .btn { flex: 1 1 auto; }
+            .foot-cols { gap: 36px; }
         }
-
-        /* INPUT STYLES (admin panel) */
-        .control-input {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.45);
-            color: #ffffff;
-            border-radius: 1rem;
-            padding: 0.85rem 1.1rem;
-            margin-bottom: 0.85rem;
-            outline: none;
-            transition: all 0.3s ease;
-            font-size: 0.925rem;
-        }
-
-        .control-input::placeholder { color: rgba(255, 255, 255, 0.5); }
-
-        .control-input:focus {
-            border-color: #ffffff;
-            background: rgba(0, 0, 0, 0.85);
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
-            transform: translateY(-1px);
-        }
-
-        select.control-input {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
-        }
-
-        select.control-input option {
-            background-color: #000000;
-            color: #fff;
-        }
-
-        /* VIEW SWITCHING LOGIC */
-        .view { display: none; opacity: 0; }
-        .view.active { display: flex; opacity: 1; }
-
-        /* LOADERS */
-        .loader { display: none; width: 18px; height: 18px; border: 2.5px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: smooth-spin 0.8s linear infinite; }
-
-        @keyframes smooth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="antialiased text-white min-h-[100dvh] w-full relative overflow-x-hidden selection:bg-white/30 font-sans flex justify-center">
+<body>
+    <div class="backdrop" aria-hidden="true"></div>
 
-    <main class="w-full max-w-md lg:max-w-none min-h-[100dvh] relative flex flex-col overflow-x-hidden overflow-y-auto no-scrollbar bg-black md:rounded-3xl md:my-8 lg:rounded-none lg:my-0 border-x border-white/5 md:border-y lg:border-0 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] lg:shadow-none">
-
-        <!-- Hero video (persistent header: video + branding overlay live in the SAME box, -->
-        <!-- so the overlay always paints above the video regardless of z-index quirks) -->
-        <div class="relative w-full h-[60vh] sm:h-[65vh] lg:h-[85vh] shrink-0 overflow-hidden">
-            <video id="bgVideo" class="absolute inset-0 w-full h-full object-cover object-center opacity-90" autoplay loop muted playsinline>
-                <source id="bgVideoSource" src="https://i.imgur.com/qY8V0Ou.mp4" type="video/mp4">
-            </video>
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-
-            <button type="button" onclick="checkAuthAndShowAdmin()" class="absolute top-6 right-6 z-20 w-10 h-10 flex items-center justify-center rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-black/60 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" title="Admin Settings">
-                <i data-lucide="settings" class="w-4 h-4"></i>
-            </button>
-
-            <div class="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-6 pb-6 lg:pb-14">
-                <img id="profileImg" src="https://i.imgur.com/p2qZOL5.png" alt="Canyon Activities Board Logo" class="card-logo h-24 sm:h-28 lg:h-36 w-auto mb-3 lg:mb-5 drop-shadow-2xl object-contain">
-                <h1 id="portalName" class="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-extrabold tracking-tight text-white mb-2 lg:mb-3 text-center drop-shadow-lg">Canyon Activities Board</h1>
-                <p id="portalBio" class="text-white/90 text-sm lg:text-base text-center mb-2 max-w-sm lg:max-w-lg leading-snug drop-shadow-md whitespace-pre-wrap"></p>
-                <a href="#" id="portalHandle" target="_blank" class="text-gray-300 text-sm md:text-base font-medium mb-4 tracking-wide drop-shadow-sm" style="display:none;">@cabgcu</a>
-
-                <div class="flex items-center justify-center gap-4 w-full">
-                    <a href="#" id="instagramLink" target="_blank" rel="noopener" style="display:none;" class="text-white hover:text-gray-300 transition-colors transform hover:scale-110 flex items-center justify-center w-10 h-10" aria-label="Instagram">
-                        <i class="fa-brands fa-instagram text-2xl lg:text-3xl"></i>
-                    </a>
-                    <a href="#" id="tiktokLink" target="_blank" rel="noopener" style="display:none;" class="text-white hover:text-gray-300 transition-colors transform hover:scale-110 flex items-center justify-center w-10 h-10" aria-label="TikTok">
-                        <i class="fa-brands fa-tiktok text-xl lg:text-2xl"></i>
-                    </a>
-                </div>
+    <!-- NAV -->
+    <header class="nav" id="nav">
+        <div class="wrap">
+            <a href="#top" class="brand" aria-label="Canyon Activities Board home">
+                <img src="https://i.imgur.com/p2qZOL5.png" alt="">
+                <span>Canyon Activities Board</span>
+            </a>
+            <nav class="nav-links" aria-label="Primary">
+                <a href="#events">Events</a>
+                <a href="#explore">Explore</a>
+                <a href="#market">Student Market</a>
+                <a href="#feedback">Feedback</a>
+                <a href="#connect">Connect</a>
+            </nav>
+            <div class="nav-cta">
+                <a href="/calendar/" class="btn btn-light btn-sm"><i data-lucide="calendar-days"></i> Calendar</a>
+                <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><i data-lucide="menu"></i></button>
             </div>
         </div>
+    </header>
 
-        <!-- PORTAL VIEW -->
-        <div id="portalView" class="view active flex-col items-center px-6 pt-6 lg:pt-10">
-                <!-- Quick Access Links -->
-                <div class="w-full max-w-[320px] lg:max-w-3xl flex flex-col gap-3 pb-8 lg:pb-16 mx-auto">
-                    <div id="linksContainer" class="w-full flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4"></div>
-                </div>
-
-                <footer class="text-white/40 text-[11px] tracking-wide w-full flex justify-center items-center pb-6">
-                    <p>© <span id="year"></span> Canyon Activities Board</p>
-                </footer>
-            </div>
-
-            <!-- ADMIN VIEW -->
-            <div id="adminView" class="view flex-col w-full max-w-[400px] lg:max-w-2xl mx-auto px-6 py-8">
-                <div class="flex justify-between items-center mb-8 border-b border-white/20 pb-4">
-                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                        <i data-lucide="sliders" class="w-5 h-5 text-white/80"></i> Portal Settings
-                    </h2>
-                    <div class="flex gap-2">
-                        <button class="night-btn-link text-white/70 hover:text-white px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 font-semibold" onclick="adminLogout()">
-                            <i data-lucide="lock" class="w-3.5 h-3.5 text-white/80"></i> Lock
-                        </button>
-                        <button class="night-btn-primary px-3 py-2 rounded-xl text-xs font-bold" onclick="switchView('portal')">
-                            Close
-                        </button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3.5 mb-8">
-                    <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-white/50">
-                        <i data-lucide="eye" class="w-6 h-6 text-white/80 mb-1.5"></i>
-                        <span class="text-2xl font-extrabold text-white" id="adminTotalViews">0</span>
-                        <span class="text-[10px] text-white/70 uppercase tracking-widest mt-1">Page Views</span>
-                    </div>
-                    <div class="night-glass-card-subtle rounded-2xl p-4 flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:border-white/50">
-                        <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-white/80 mb-1.5"></i>
-                        <span class="text-2xl font-extrabold text-white" id="adminTotalClicks">0</span>
-                        <span class="text-[10px] text-white/70 uppercase tracking-widest mt-1">Total Clicks</span>
-                    </div>
-                </div>
-
-                <!-- Branding Settings -->
-                <div class="mb-8 border-b border-white/20 pb-8">
-                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="user" class="w-3.5 h-3.5"></i> Branding & Profile
-                    </label>
-                    <input type="text" id="setProfileName" class="control-input" placeholder="Display Name">
-                    <input type="text" id="setSocialHandle" class="control-input" placeholder="Instagram Handle (e.g. @cabgcu)">
-                    <input type="text" id="setTiktokHandle" class="control-input" placeholder="TikTok Handle (e.g. @cabgcu)">
-                    <textarea id="setProfileBio" class="control-input min-h-[85px] resize-y" placeholder="Portal Bio..."></textarea>
-                    <input type="text" id="setAvatarUrl" class="control-input !mb-0" placeholder="Avatar Logo Image URL">
-                </div>
-
-                <!-- Background Video Management -->
-                <div class="mb-8 border-b border-white/20 pb-8">
-                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="video" class="w-3.5 h-3.5"></i> Background Video
-                    </label>
-                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-white/30">
-                        <input type="file" id="videoUploadInput" accept="video/mp4,video/webm" class="w-full text-xs text-white/70 mb-3 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-white/30 file:text-white/70 hover:file:bg-white/50 transition cursor-pointer">
-                        <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2" onclick="uploadBackgroundVideo()" id="uploadVideoBtn">
-                            <i data-lucide="upload-cloud" class="w-4 h-4 text-white/80"></i> Upload New Video to Storage
-                            <div class="loader" id="uploadVideoLoader"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Link Manager -->
-                <div class="mb-8 border-b border-white/20 pb-8">
-                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="link" class="w-3.5 h-3.5"></i> Manage Links
-                    </label>
-                    <div id="link-list-manager" class="flex flex-col gap-2 mb-4 max-h-[220px] overflow-y-auto pr-1"></div>
-
-                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-white/30 flex flex-col gap-3">
-                        <div class="flex gap-2">
-                            <input type="text" id="newLinkIcon" class="control-input !mb-0 w-16 text-center text-lg" placeholder="🔗">
-                            <input type="text" id="newLinkTitle" class="control-input !mb-0 flex-1" placeholder="Link Title">
-                        </div>
-                        <input type="text" id="newLinkUrl" class="control-input !mb-0" placeholder="https://...">
-                        <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2" onclick="addLinkUI()">
-                            <i data-lucide="plus" class="w-4 h-4 text-white/80"></i> Add New Link Button
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Event Manager -->
-                <div class="mb-8 border-b border-white/20 pb-8">
-                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Manage Events
-                    </label>
-                    <div id="event-list-manager" class="flex flex-col gap-2 mb-4 max-h-[220px] overflow-y-auto pr-1"></div>
-
-                    <div class="night-glass-card-subtle p-4 rounded-2xl border-dashed border-white/30 flex flex-col gap-3">
-                        <input type="text" id="newEventTitle" class="control-input !mb-0" placeholder="Event Title">
-                        <input type="date" id="newEventDate" class="control-input !mb-0 w-full" style="color-scheme: dark;">
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <div class="flex-1">
-                                <label class="text-[10px] text-white/70 font-bold uppercase pl-1 mb-1 block">Start Time</label>
-                                <input type="time" id="newEventStartTime" class="control-input !mb-0 w-full" style="color-scheme: dark;">
-                            </div>
-                            <div class="flex-1">
-                                <label class="text-[10px] text-white/70 font-bold uppercase pl-1 mb-1 block">End Time</label>
-                                <input type="time" id="newEventEndTime" class="control-input !mb-0 w-full" style="color-scheme: dark;">
-                            </div>
-                        </div>
-                        <input type="text" id="newEventLocation" class="control-input !mb-0 mt-1" placeholder="Location">
-                        <textarea id="newEventDesc" class="control-input min-h-[60px] resize-y !mb-0" placeholder="Short Description..."></textarea>
-
-                        <button class="w-full night-btn-link py-2.5 rounded-xl text-xs font-bold text-white flex justify-center items-center gap-2 mt-1" onclick="addEventUI()">
-                            <i data-lucide="plus" class="w-4 h-4 text-white/80"></i> Add New Event
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Security -->
-                <div class="mb-8">
-                    <label class="block mb-3.5 text-white/65 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Security Settings
-                    </label>
-                    <input type="password" id="setAdminPassword" class="control-input !mb-0" placeholder="New Password (leave blank to keep current)">
-                </div>
-
-                <button class="w-full night-btn-primary font-bold py-4 rounded-2xl flex justify-center items-center gap-2 text-sm tracking-wide uppercase" id="saveBtn" onclick="saveAdminSettings()">
-                    Save All Changes <div class="loader" id="saveLoader"></div>
-                </button>
-            </div>
-    </main>
-
-    <!-- Admin Login Modal -->
-    <div id="gateModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="display: none;">
-        <div id="gateBackdrop" class="absolute inset-0 bg-black/75 backdrop-blur-md" onclick="hideGate()"></div>
-
-        <div id="gateCard" class="relative w-full max-w-sm night-glass-card rounded-[32px] p-8 flex flex-col items-center text-center shadow-2xl border-white/40 z-10">
-            <div class="logo-box mb-5">
-                <img id="adminGateImg" src="https://i.imgur.com/p2qZOL5.png" alt="Admin Gate" class="w-16 h-16 object-contain relative z-10 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
-            </div>
-            <h3 class="text-2xl font-bold mb-1 text-white tracking-tight">Admin Access</h3>
-            <p class="text-white/70 text-xs mb-6">Authenticate to access portal controls</p>
-
-            <input type="email" id="adminEmail" class="control-input text-center" placeholder="Admin Email">
-            <input type="password" id="adminPass" class="control-input text-center mb-6" placeholder="Password" onkeyup="if(event.key==='Enter') verifyAdmin()">
-
-            <button class="w-full night-btn-primary font-bold py-3.5 rounded-2xl flex justify-center items-center gap-2 text-sm" id="gateBtn" onclick="verifyAdmin()">
-                Authorize Access <div class="loader" id="gateLoader"></div>
-            </button>
-        </div>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#events">Events <i data-lucide="arrow-right"></i></a>
+        <a href="/calendar/">Full Calendar <i data-lucide="arrow-up-right"></i></a>
+        <a href="#market">Student Market <i data-lucide="arrow-right"></i></a>
+        <a href="#feedback">Event Feedback <i data-lucide="arrow-right"></i></a>
+        <a href="#connect">Connect <i data-lucide="arrow-right"></i></a>
     </div>
 
-    <!-- Events Modal -->
-    <div id="eventsModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="display: none;">
-        <div id="eventsBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="hideEvents()"></div>
-
-        <div id="eventsCard" class="relative w-full max-w-2xl max-h-[85vh] night-glass-card rounded-[32px] p-6 sm:p-10 flex flex-col shadow-[0_0_80px_rgba(255, 255, 255,0.3)] border-white/40 z-10">
-            <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-white/65"></i>
-                    </div>
-                    <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Upcoming Events</h3>
+    <main id="top">
+        <!-- HERO -->
+        <section class="hero">
+            <video id="bgVideo" autoplay loop muted playsinline poster="https://i.imgur.com/APGH0Wv.png">
+                <source src="https://i.imgur.com/qY8V0Ou.mp4" type="video/mp4">
+            </video>
+            <div class="wrap">
+                <img id="heroLogo" class="hero-logo" src="https://i.imgur.com/p2qZOL5.png" alt="Canyon Activities Board logo">
+                <div class="eyebrow"><span class="dot"></span> Grand Canyon University</div>
+                <h1>Canyon Activities <span class="serif">Board</span></h1>
+                <p class="lead" id="heroBio">Student-run events, markets and moments that make GCU feel like home. Find out what's happening and get involved.</p>
+                <div class="hero-actions">
+                    <a href="#events" class="btn btn-light"><i data-lucide="sparkles"></i> See what's on</a>
+                    <a href="/calendar/" class="btn btn-glass"><i data-lucide="calendar-days"></i> Full calendar</a>
                 </div>
-                <button class="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 border border-white/30 text-white/70 hover:text-white hover:bg-white/30 transition-all duration-300 focus:outline-none hover:scale-110 shadow-lg" onclick="hideEvents()">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-            <div id="publicEventsList" class="flex-1 overflow-y-auto pr-2 flex flex-col gap-4">
-                <!-- Events injected here -->
-            </div>
-            <div class="mt-6 pt-5 border-t border-white/20 flex justify-center flex-shrink-0">
-                <a href="https://cabgcu.github.io/calendar/" target="_blank" rel="noopener" class="night-btn-primary px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
-                    <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i> Open Full Calendar
+                <a href="#events" class="next-up" id="nextUp">
+                    <div class="mini-date"><small id="nextMonth"></small><b id="nextDay"></b></div>
+                    <div class="meta">
+                        <div class="label">Next up</div>
+                        <div class="title" id="nextTitle"></div>
+                        <div class="sub" id="nextSub"></div>
+                    </div>
+                    <i data-lucide="arrow-down-right"></i>
                 </a>
             </div>
+            <div class="scroll-hint" aria-hidden="true">Scroll</div>
+        </section>
+
+        <!-- EVENTS -->
+        <section class="block" id="events">
+            <div class="wrap">
+                <div class="section-head reveal">
+                    <div>
+                        <div class="eyebrow">Upcoming</div>
+                        <h2>What's <span class="serif">happening</span></h2>
+                        <p>The next events from CAB. Add any of them straight to your calendar.</p>
+                    </div>
+                    <a href="/calendar/" class="btn btn-glass">Open full calendar <i data-lucide="arrow-up-right"></i></a>
+                </div>
+                <div class="events-grid" id="eventsGrid">
+                    <div class="glass skeleton"></div>
+                    <div class="glass skeleton"></div>
+                    <div class="glass skeleton"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPLORE -->
+        <section class="block" id="explore">
+            <div class="wrap">
+                <div class="section-head reveal">
+                    <div>
+                        <div class="eyebrow">Everything CAB</div>
+                        <h2>One place, <span class="serif">every</span> way in</h2>
+                        <p>Browse the calendar, apply to sell at the Student Market, or tell us how an event went.</p>
+                    </div>
+                </div>
+                <div class="explore-grid">
+                    <a href="/calendar/" class="glass explore-card reveal">
+                        <div class="glow" style="background:#2563eb"></div>
+                        <span class="num">01</span>
+                        <div class="icon-wrap"><i data-lucide="calendar-days"></i></div>
+                        <h3>Events Calendar</h3>
+                        <p>Every CAB event by month, with times, locations and one-tap add to Google, Apple or Outlook.</p>
+                        <span class="go">Browse events <i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a href="/studentmarkets/" class="glass explore-card reveal">
+                        <div class="glow" style="background:#8b5cf6"></div>
+                        <span class="num">02</span>
+                        <div class="icon-wrap"><i data-lucide="store"></i></div>
+                        <h3>Student Market</h3>
+                        <p>Run a small business or make something people love? Apply for a booth, or check on an application you've already sent.</p>
+                        <span class="go">Apply as a vendor <i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a href="/survey/" class="glass explore-card reveal">
+                        <div class="glow" style="background:#f59e0b"></div>
+                        <span class="num">03</span>
+                        <div class="icon-wrap"><i data-lucide="message-square-heart"></i></div>
+                        <h3>Event Survey</h3>
+                        <p>Went to an event or market? Take 60 seconds to rate it and help shape what we plan next.</p>
+                        <span class="go">Share feedback <i data-lucide="arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- STUDENT MARKET -->
+        <section class="block" id="market">
+            <div class="wrap">
+                <div class="glass band reveal">
+                    <div class="band-copy">
+                        <div class="eyebrow">Student Market</div>
+                        <h2>Sell your <span class="serif">craft</span> on campus</h2>
+                        <p>The CAB Student Market gives student makers, artists and small businesses a booth in front of the whole GCU community.</p>
+                        <ol class="steps">
+                            <li><span class="n">1</span><div><b>Pick a market</b>Choose an open market date and start your application with your Student ID.</div></li>
+                            <li><span class="n">2</span><div><b>Tell us about your booth</b>Share what you sell and what you need on the day.</div></li>
+                            <li><span class="n">3</span><div><b>Watch your inbox</b>We'll email you once your application has been reviewed.</div></li>
+                        </ol>
+                        <div class="band-actions">
+                            <a href="/studentmarkets/" class="btn btn-light"><i data-lucide="store"></i> Start an application</a>
+                            <a href="/studentmarkets/" class="btn btn-glass"><i data-lucide="search"></i> Check status</a>
+                        </div>
+                    </div>
+                    <div class="band-art" aria-hidden="true">
+                        <img src="https://i.imgur.com/p2qZOL5.png" alt="">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEEDBACK -->
+        <section class="block" id="feedback">
+            <div class="wrap">
+                <div class="glass survey-band reveal">
+                    <div class="stars" aria-hidden="true">
+                        <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i>
+                    </div>
+                    <div class="eyebrow">Event Survey</div>
+                    <h2>You're the reason <span class="serif">we're here</span></h2>
+                    <p>Tell us what you loved and what we should change. Every response goes straight to the board and shapes the rest of the year.</p>
+                    <a href="/survey/" class="btn btn-light"><i data-lucide="message-square-heart"></i> Take the 60-second survey</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONNECT -->
+        <section class="block" id="connect">
+            <div class="wrap">
+                <div class="section-head reveal">
+                    <div>
+                        <div class="eyebrow">Stay in the loop</div>
+                        <h2>Connect with <span class="serif">CAB</span></h2>
+                    </div>
+                </div>
+                <div class="connect">
+                    <div class="glass connect-social reveal">
+                        <h3>Follow along</h3>
+                        <p>Event drops, giveaways and behind-the-scenes. We post first on socials.</p>
+                        <div class="social-row">
+                            <a href="https://instagram.com/cabgcu" target="_blank" rel="noopener" class="social" id="instaLink">
+                                <i class="fa-brands fa-instagram"></i>
+                                <div><span>Instagram</span><small id="instaHandle">@cabgcu</small></div>
+                                <i data-lucide="arrow-up-right"></i>
+                            </a>
+                            <a href="https://www.tiktok.com/@cabgcu" target="_blank" rel="noopener" class="social" id="tiktokLink">
+                                <i class="fa-brands fa-tiktok"></i>
+                                <div><span>TikTok</span><small id="tiktokHandle">@cabgcu</small></div>
+                                <i data-lucide="arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="glass links-panel reveal">
+                        <h3>Quick links</h3>
+                        <div class="links-list" id="linksList">
+                            <a href="/calendar/" class="link-pill"><span class="t">📅 Events Calendar</span><i data-lucide="chevron-right"></i></a>
+                            <a href="/studentmarkets/" class="link-pill"><span class="t">🛍️ Student Market Application</span><i data-lucide="chevron-right"></i></a>
+                            <a href="/survey/" class="link-pill"><span class="t">⭐ Event Survey</span><i data-lucide="chevron-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <div class="foot">
+                <div>
+                    <a href="#top" class="brand"><img src="https://i.imgur.com/p2qZOL5.png" alt=""><span>Canyon Activities Board</span></a>
+                    <p>Student-run events and experiences at Grand Canyon University.</p>
+                </div>
+                <div class="foot-cols">
+                    <div class="foot-col">
+                        <h4>Explore</h4>
+                        <a href="/calendar/">Events Calendar</a>
+                        <a href="/studentmarkets/">Student Market</a>
+                        <a href="/survey/">Event Survey</a>
+                    </div>
+                    <div class="foot-col">
+                        <h4>Social</h4>
+                        <a href="https://instagram.com/cabgcu" target="_blank" rel="noopener" id="footInsta">Instagram</a>
+                        <a href="https://www.tiktok.com/@cabgcu" target="_blank" rel="noopener" id="footTiktok">TikTok</a>
+                        <a href="/portal/">All links</a>
+                    </div>
+                </div>
+            </div>
+            <div class="foot-bottom">
+                <span>© <span id="year"></span> Canyon Activities Board</span>
+                <a href="/portal/">Board login</a>
+            </div>
         </div>
-    </div>
+    </footer>
 
     <script>
         const SUPABASE_URL = "https://nmmshjdknmuzpgpquwec.supabase.co";
         const SUPABASE_KEY = "sb_publishable_PCxlxywY7W6K3TmMrSnSsw_NPXKugoZ";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let state = {
-            config: {
-                portalName: "Canyon Activities Board",
-                portalBio: "",
-                socialHandle: "@cabgcu",
-                tiktokHandle: "@cabgcu",
-                avatarUrl: "",
-                bgVideoUrl: "",
-                links: [],
-                events: [],
-                pageViews: 0
-            }
-        };
+        const DEFAULT_LOGO = "https://i.imgur.com/p2qZOL5.png";
+        let EVENTS = [];
+        let LINKS = [];
 
-        // Security Helper
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Security helpers
         function escapeHTML(str) {
-            if (!str) return '';
+            if (str === undefined || str === null) return '';
             return str.toString().replace(/[&<>'"]/g, tag => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
             }[tag] || tag));
         }
 
-        document.getElementById('year').textContent = new Date().getFullYear();
+        function safeUrl(url) {
+            const u = (url || '').toString().trim();
+            if (/^(https?:|mailto:|tel:|\/|#)/i.test(u)) return u;
+            if (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(u)) return 'https://' + u;
+            return '#';
+        }
+
+        // ── NAV ──
+        const nav = document.getElementById('nav');
+        const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 24);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        function setMenu(open) {
+            mobileMenu.classList.toggle('open', open);
+            menuBtn.setAttribute('aria-expanded', open);
+            menuBtn.innerHTML = `<i data-lucide="${open ? 'x' : 'menu'}"></i>`;
+            document.body.style.overflow = open ? 'hidden' : '';
+            lucide.createIcons();
+        }
+        menuBtn.addEventListener('click', () => setMenu(!mobileMenu.classList.contains('open')));
+        mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+
+        // ── REVEAL ──
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+        }, { threshold: 0.12 });
+        function observeReveals() { document.querySelectorAll('.reveal:not(.in)').forEach(el => io.observe(el)); }
 
         document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            observeReveals();
             syncData();
-
-            // GSAP Entrance Animations
-            const tl = gsap.timeline();
-            tl.from("#profileImg", {
-                scale: 0,
-                rotation: 360,
-                duration: 0.9,
-                ease: "elastic.out(1, 0.5)"
-            })
-            .from("#portalName, #portalBio, #linksContainer", {
-                opacity: 0,
-                y: 20,
-                stagger: 0.08,
-                duration: 0.5
-            }, "-=0.5");
-
-            gsap.to(".card-logo", { y: -6, duration: 2.2, repeat: -1, yoyo: true, ease: "sine.inOut" });
         });
 
+        // ── DATA ──
         async function syncData() {
             try {
-                const configRes = await _supabase.from('portal_config').select('*');
+                const { data, error } = await _supabase.from('portal_config').select('*');
+                if (error) throw error;
 
-                if (configRes.data) {
-                    configRes.data.forEach(row => {
-                        if (row.key === "PortalName") state.config.portalName = row.value;
-                        if (row.key === "PortalBio") state.config.portalBio = row.value;
-                        if (row.key === "SocialHandle") state.config.socialHandle = row.value;
-                        if (row.key === "TiktokHandle") state.config.tiktokHandle = row.value;
-                        if (row.key === "AvatarUrl") state.config.avatarUrl = row.value;
-                        if (row.key === "BgVideoUrl") state.config.bgVideoUrl = row.value;
-                        if (row.key === "PageViews") state.config.pageViews = parseInt(row.value) || 0;
-                        if (row.key === "LinksJson") state.config.links = JSON.parse(row.value || "[]");
-                        if (row.key === "EventsJson") {
-                            // Migrate old single `time` property to `startTime` for backward compatibility
-                            let evs = JSON.parse(row.value || "[]");
-                            evs = evs.map(e => {
-                                if (e.time && !e.startTime) e.startTime = e.time;
-                                return e;
-                            });
-                            state.config.events = evs;
-                        }
-                    });
-                }
+                const config = {};
+                (data || []).forEach(row => config[row.key] = row.value);
 
-                renderPortal();
+                applyBranding(config);
 
-                // Track page view once per session load
+                LINKS = safeParse(config.LinksJson);
+                renderLinks();
+
+                EVENTS = safeParse(config.EventsJson).map(e => {
+                    if (e.time && !e.startTime) e.startTime = e.time;
+                    return e;
+                });
+                renderEvents();
+
                 if (!sessionStorage.getItem('viewTracked')) {
                     trackPageView();
                     sessionStorage.setItem('viewTracked', 'true');
                 }
-
             } catch (e) {
-                console.error("Sync error:", e);
+                console.error('Sync error:', e);
+                renderEventsError();
             }
         }
 
-        function renderPortal() {
-            document.getElementById('portalName').textContent = state.config.portalName;
-            document.getElementById('portalBio').textContent = state.config.portalBio;
+        function safeParse(json) {
+            try { const v = JSON.parse(json || '[]'); return Array.isArray(v) ? v : []; }
+            catch (e) { return []; }
+        }
 
-            // Background Video
-            const videoElement = document.getElementById('bgVideo');
-            if (state.config.bgVideoUrl && videoElement.src !== state.config.bgVideoUrl) {
-                videoElement.src = state.config.bgVideoUrl;
-                videoElement.load(); // Ensure new source applies
+        function applyBranding(config) {
+            if (config.PortalBio && config.PortalBio.trim()) {
+                document.getElementById('heroBio').textContent = config.PortalBio;
+            }
+            if (config.BgVideoUrl) {
+                const v = document.getElementById('bgVideo');
+                v.src = config.BgVideoUrl;
+                v.load();
             }
 
-            const handleEl = document.getElementById('portalHandle');
-            const instaEl = document.getElementById('instagramLink');
-            if (state.config.socialHandle) {
-                const cleanHandle = state.config.socialHandle.replace('@', '').trim();
-                handleEl.textContent = state.config.socialHandle;
-                handleEl.href = `https://instagram.com/${cleanHandle}`;
-                handleEl.style.display = 'inline-block';
+            setSocial(config.SocialHandle, 'instaLink', 'instaHandle', 'footInsta', h => `https://instagram.com/${h}`);
+            setSocial(config.TiktokHandle, 'tiktokLink', 'tiktokHandle', 'footTiktok', h => `https://www.tiktok.com/@${h}`);
+        }
 
-                instaEl.href = `https://instagram.com/${cleanHandle}`;
-                instaEl.style.display = 'flex';
-            } else {
-                handleEl.style.display = 'none';
-                instaEl.style.display = 'none';
-            }
+        function setSocial(handle, linkId, labelId, footId, toUrl) {
+            if (handle === undefined) return; // keep defaults
+            const clean = (handle || '').replace('@', '').trim();
+            const els = [document.getElementById(linkId), document.getElementById(footId)];
+            if (!clean) { els.forEach(el => el.style.display = 'none'); return; }
+            const url = toUrl(encodeURIComponent(clean));
+            els.forEach(el => el.href = url);
+            document.getElementById(labelId).textContent = '@' + clean;
+        }
 
-            const tiktokEl = document.getElementById('tiktokLink');
-            if (state.config.tiktokHandle) {
-                const cleanTiktok = state.config.tiktokHandle.replace('@', '').trim();
-                tiktokEl.href = `https://www.tiktok.com/@${cleanTiktok}`;
-                tiktokEl.style.display = 'flex';
-            } else {
-                tiktokEl.style.display = 'none';
-            }
-
-            const adminGateImg = document.getElementById('adminGateImg');
-            const profileImg = document.getElementById('profileImg');
-
-            if (state.config.avatarUrl) {
-                profileImg.src = state.config.avatarUrl;
-                adminGateImg.src = state.config.avatarUrl;
-            } else {
-                profileImg.src = "https://i.imgur.com/p2qZOL5.png";
-                adminGateImg.src = "https://i.imgur.com/p2qZOL5.png";
-            }
-
-            document.getElementById('linksContainer').innerHTML = state.config.links.map((link, i) => `
-                <a href="${escapeHTML(link.url)}" target="_blank" onclick="trackLinkClick(${i})" class="w-full night-link-pill text-white font-semibold py-3.5 px-6 rounded-full transition-all transform hover:-translate-y-1 shadow-lg text-center flex justify-center items-center relative group">
-                    <span class="truncate">${link.icon ? escapeHTML(link.icon) + ' ' : ''}${escapeHTML(link.title)}</span>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all absolute right-6"></i>
-                </a>
-            `).join('');
-
+        function renderLinks() {
+            if (!LINKS.length) return; // keep built-in quick links
+            document.getElementById('linksList').innerHTML = LINKS.map((link, i) => `
+                <a href="${escapeHTML(safeUrl(link.url))}" target="_blank" rel="noopener" class="link-pill" onclick="trackLinkClick(${i})">
+                    <span class="t">${link.icon ? escapeHTML(link.icon) + ' ' : ''}${escapeHTML(link.title)}</span>
+                    <i data-lucide="chevron-right"></i>
+                </a>`).join('');
             lucide.createIcons();
         }
 
+        // ── EVENTS ──
+        function upcomingEvents() {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            return EVENTS
+                .filter(ev => ev.date && new Date(ev.date + 'T00:00:00') >= today)
+                .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')));
+        }
+
+        function relativeDay(dateStr) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const diff = Math.round((new Date(dateStr + 'T00:00:00') - today) / 86400000);
+            if (diff === 0) return 'Today';
+            if (diff === 1) return 'Tomorrow';
+            if (diff < 7) return 'This week';
+            return '';
+        }
+
+        function renderEvents() {
+            const grid = document.getElementById('eventsGrid');
+            const list = upcomingEvents();
+            renderNextUp(list[0]);
+
+            if (!list.length) {
+                grid.innerHTML = `
+                    <div class="glass state-box">
+                        <i data-lucide="calendar-clock"></i>
+                        <h3>New events are on the way</h3>
+                        <p>Nothing is scheduled right now. Follow us to hear about the next one first.</p>
+                        <a href="#connect" class="btn btn-glass btn-sm">Follow CAB</a>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = list.slice(0, 7).map((ev, i) => {
+                const d = new Date(ev.date + 'T00:00:00');
+                const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+                const soon = relativeDay(ev.date);
+                const time = ev.startTime ? formatTime(ev.startTime) + (ev.endTime ? ' – ' + formatTime(ev.endTime) : '') : '';
+                return `
+                <article class="glass event-card reveal${i === 0 ? ' featured' : ''}">
+                    <div class="event-top">
+                        <div class="date-badge"><small>${month}</small><b>${d.getDate()}</b></div>
+                        <div>
+                            <div class="event-when">${weekday}${soon ? `<span class="pill-soon">${soon}</span>` : ''}</div>
+                        </div>
+                    </div>
+                    <h3>${escapeHTML(ev.title)}</h3>
+                    <div class="event-info">
+                        ${time ? `<span><i data-lucide="clock"></i>${time}</span>` : ''}
+                        ${ev.location ? `<span><i data-lucide="map-pin"></i>${escapeHTML(ev.location)}</span>` : ''}
+                    </div>
+                    ${ev.desc ? `<p class="event-desc">${escapeHTML(ev.desc)}</p>` : ''}
+                    <div class="event-actions">
+                        <a class="chip-btn" href="${googleCalLink(ev)}" target="_blank" rel="noopener"><i data-lucide="calendar-plus"></i> Google</a>
+                        <button class="chip-btn" type="button" onclick="downloadICS(${EVENTS.indexOf(ev)})"><i data-lucide="download"></i> Apple / .ics</button>
+                    </div>
+                </article>`;
+            }).join('');
+
+            if (list.length > 7) {
+                grid.insertAdjacentHTML('beforeend', `
+                    <a href="/calendar/" class="glass event-card reveal" style="align-items:center;justify-content:center;text-align:center">
+                        <h3>+${list.length - 7} more</h3>
+                        <span class="go" style="display:inline-flex;gap:8px;color:var(--ink-2)">See the full calendar <i data-lucide="arrow-right"></i></span>
+                    </a>`);
+            }
+
+            lucide.createIcons();
+            observeReveals();
+        }
+
+        function renderEventsError() {
+            document.getElementById('eventsGrid').innerHTML = `
+                <div class="glass state-box">
+                    <i data-lucide="wifi-off"></i>
+                    <h3>Couldn't load events</h3>
+                    <p>Check your connection, or browse the full calendar instead.</p>
+                    <a href="/calendar/" class="btn btn-glass btn-sm">Open calendar</a>
+                </div>`;
+            lucide.createIcons();
+        }
+
+        function renderNextUp(ev) {
+            if (!ev) return;
+            const d = new Date(ev.date + 'T00:00:00');
+            document.getElementById('nextMonth').textContent = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+            document.getElementById('nextDay').textContent = d.getDate();
+            document.getElementById('nextTitle').textContent = ev.title || 'Upcoming event';
+            const parts = [relativeDay(ev.date) || d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })];
+            if (ev.startTime) parts.push(formatTime(ev.startTime));
+            if (ev.location) parts.push(ev.location);
+            document.getElementById('nextSub').textContent = parts.join(' · ');
+            document.getElementById('nextUp').classList.add('show');
+        }
+
+        function formatTime(t) {
+            if (!t) return '';
+            const [h, m] = t.split(':');
+            const d = new Date();
+            d.setHours(parseInt(h, 10), parseInt(m, 10) || 0);
+            return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function eventRange(ev) {
+            if (ev.startTime) {
+                const start = new Date(`${ev.date}T${ev.startTime}`);
+                let end;
+                if (ev.endTime) {
+                    end = new Date(`${ev.date}T${ev.endTime}`);
+                    if (end < start) end.setDate(end.getDate() + 1);
+                } else {
+                    end = new Date(start); end.setHours(end.getHours() + 2);
+                }
+                const fmt = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+                return { allDay: false, start: fmt(start), end: fmt(end) };
+            }
+            const next = new Date(ev.date + 'T00:00:00'); next.setDate(next.getDate() + 1);
+            const pad = n => String(n).padStart(2, '0');
+            return { allDay: true, start: ev.date.replace(/-/g, ''), end: `${next.getFullYear()}${pad(next.getMonth() + 1)}${pad(next.getDate())}` };
+        }
+
+        function googleCalLink(ev) {
+            const r = eventRange(ev);
+            const params = new URLSearchParams({ action: 'TEMPLATE', text: ev.title || '', dates: `${r.start}/${r.end}`, details: ev.desc || '', location: ev.location || '' });
+            return 'https://calendar.google.com/calendar/render?' + params.toString();
+        }
+
+        function downloadICS(idx) {
+            const ev = EVENTS[idx];
+            if (!ev) return;
+            const r = eventRange(ev);
+            const esc = s => (s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
+            const stamp = new Date().toISOString().replace(/-|:|\.\d\d\d/g, '');
+            const ics = [
+                'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CAB Portal//EN',
+                'BEGIN:VEVENT',
+                `UID:${Date.now()}@cabgcu`,
+                `DTSTAMP:${stamp}`,
+                r.allDay ? `DTSTART;VALUE=DATE:${r.start}` : `DTSTART:${r.start}`,
+                r.allDay ? `DTEND;VALUE=DATE:${r.end}` : `DTEND:${r.end}`,
+                `SUMMARY:${esc(ev.title)}`,
+                `DESCRIPTION:${esc(ev.desc)}`,
+                `LOCATION:${esc(ev.location)}`,
+                'END:VEVENT', 'END:VCALENDAR'
+            ].join('\r\n');
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${(ev.title || 'event').replace(/[^\w-]+/g, '_')}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        // ── ANALYTICS (same counters the portal admin panel reports) ──
         async function trackPageView() {
             try {
                 const { data } = await _supabase.from('portal_config').select('value').eq('key', 'PageViews').maybeSingle();
-                let currentViews = data ? (parseInt(data.value) || 0) : 0;
-                if (data) {
-                    await _supabase.from('portal_config').update({ value: (currentViews + 1).toString() }).eq('key', 'PageViews');
-                } else {
-                    await _supabase.from('portal_config').insert([{ key: 'PageViews', value: '1' }]);
-                }
+                const current = data ? (parseInt(data.value) || 0) : 0;
+                if (data) await _supabase.from('portal_config').update({ value: (current + 1).toString() }).eq('key', 'PageViews');
+                else await _supabase.from('portal_config').insert([{ key: 'PageViews', value: '1' }]);
             } catch (e) { console.warn('Tracking blocked', e); }
         }
 
         async function trackLinkClick(idx) {
             try {
                 const { data } = await _supabase.from('portal_config').select('value').eq('key', 'LinksJson').single();
-                if (data) {
-                    let freshLinks = JSON.parse(data.value || "[]");
-                    if (freshLinks[idx]) {
-                        freshLinks[idx].clicks = (freshLinks[idx].clicks || 0) + 1;
-                        await _supabase.from('portal_config').update({ value: JSON.stringify(freshLinks) }).eq('key', 'LinksJson');
-                    }
+                if (!data) return;
+                const fresh = JSON.parse(data.value || '[]');
+                if (fresh[idx]) {
+                    fresh[idx].clicks = (fresh[idx].clicks || 0) + 1;
+                    await _supabase.from('portal_config').update({ value: JSON.stringify(fresh) }).eq('key', 'LinksJson');
                 }
             } catch (e) { console.warn('Click tracking blocked', e); }
         }
-
-        function loadAdminValues() {
-            document.getElementById('setProfileName').value = state.config.portalName || '';
-            document.getElementById('setProfileBio').value = state.config.portalBio || '';
-            document.getElementById('setSocialHandle').value = state.config.socialHandle || '';
-            document.getElementById('setTiktokHandle').value = state.config.tiktokHandle || '';
-            document.getElementById('setAvatarUrl').value = state.config.avatarUrl || '';
-            document.getElementById('setAdminPassword').value = '';
-
-            const totalClicks = state.config.links.reduce((sum, link) => sum + (link.clicks || 0), 0);
-            document.getElementById('adminTotalViews').textContent = state.config.pageViews || 0;
-            document.getElementById('adminTotalClicks').textContent = totalClicks;
-
-            renderAdminLinks();
-            renderAdminEvents();
-        }
-
-        async function uploadBackgroundVideo() {
-            const input = document.getElementById('videoUploadInput');
-            const file = input.files[0];
-            if (!file) return alert("Please select a video file to upload.");
-
-            const btn = document.getElementById('uploadVideoBtn');
-            const loader = document.getElementById('uploadVideoLoader');
-            btn.disabled = true; loader.style.display = "inline-block";
-
-            try {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `video_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-                const { data: uploadData, error: uploadError } = await _supabase.storage
-                    .from('backgrounds')
-                    .upload(fileName, file);
-
-                if (uploadError) throw uploadError;
-
-                const { data } = _supabase.storage.from('backgrounds').getPublicUrl(fileName);
-                state.config.bgVideoUrl = data.publicUrl;
-
-                // Immediately save to configuration so it doesn't get lost before main save
-                await _supabase.from('portal_config').upsert({ key: 'BgVideoUrl', value: state.config.bgVideoUrl }, { onConflict: 'key' });
-
-                input.value = "";
-                renderPortal();
-                alert("Video uploaded & saved successfully!");
-            } catch (error) {
-                console.error(error);
-                alert("Upload failed. Make sure your storage bucket 'backgrounds' is configured to allow video uploads.");
-            } finally {
-                btn.disabled = false; loader.style.display = "none";
-            }
-        }
-
-        // --- Link Management ---
-        function renderAdminLinks() {
-            const mgr = document.getElementById('link-list-manager');
-            mgr.innerHTML = state.config.links.map((l, i) => `
-                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-white/40">
-                    <div class="flex items-center gap-2">
-                        <input type="text" class="w-10 bg-black/80 border border-white/30 text-white rounded-lg text-center py-1.5 outline-none focus:border-white/80 text-xs" value="${escapeHTML(l.icon) || '🔗'}" onchange="updateLinkIcon(${i}, this.value)" title="Change Emoji">
-                        <span class="flex-1 text-xs text-white/90 font-medium truncate pl-1">${escapeHTML(l.title)}</span>
-                        <div class="flex gap-1 shrink-0">
-                            <button class="bg-white/10 hover:bg-white/20 text-white/65 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
-                            <button class="bg-white/10 hover:bg-white/20 text-white/65 p-1.5 rounded-lg transition disabled:opacity-30" onclick="moveLink(${i}, 1)" ${i === state.config.links.length - 1 ? 'disabled' : ''}><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                        <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110" onclick="removeLink(${i})" title="Delete">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    <div class="text-[10px] text-white/70 font-semibold ml-[48px] uppercase tracking-wider flex items-center">
-                        <i data-lucide="mouse-pointer-click" class="w-3 h-3 mr-1 text-white/80"></i> ${l.clicks || 0} total clicks
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function updateLinkIcon(idx, newIcon) { state.config.links[idx].icon = newIcon || '🔗'; }
-
-        function moveLink(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= state.config.links.length) return;
-            const temp = state.config.links[index];
-            state.config.links[index] = state.config.links[newIndex];
-            state.config.links[newIndex] = temp;
-            renderAdminLinks();
-        }
-
-        function removeLink(idx) { state.config.links.splice(idx,1); renderAdminLinks(); }
-
-        function addLinkUI() {
-            const i = document.getElementById('newLinkIcon').value || '🔗';
-            const t = document.getElementById('newLinkTitle').value;
-            const u = document.getElementById('newLinkUrl').value;
-            if(!t || !u) return alert("Please enter both link title and URL.");
-
-            state.config.links.push({title:t, url:u, icon: i, clicks: 0});
-
-            document.getElementById('newLinkIcon').value = '';
-            document.getElementById('newLinkTitle').value = '';
-            document.getElementById('newLinkUrl').value = '';
-            renderAdminLinks();
-        }
-
-        function renderAdminEvents() {
-            const mgr = document.getElementById('event-list-manager');
-            if (state.config.events.length === 0) {
-                mgr.innerHTML = `<div class="text-center p-3 text-white/50 text-xs italic border border-dashed border-white/20 rounded-xl">No events scheduled.</div>`;
-                return;
-            }
-
-            const sortedEvents = [...state.config.events].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            mgr.innerHTML = sortedEvents.map((ev, i) => `
-                <div class="flex flex-col night-glass-card-subtle p-3 rounded-xl gap-2 transition-all hover:border-white/40">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1 min-w-0 pr-2">
-                            <h4 class="text-sm font-bold text-white truncate">${escapeHTML(ev.title)}</h4>
-                            <div class="text-xs text-white/80 mt-1 flex flex-wrap items-center gap-2">
-                                <span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDateDisplay(ev.date)}</span>
-                                ${ev.startTime ? `<span class="flex items-center gap-1 whitespace-nowrap"><i data-lucide="clock" class="w-3 h-3 ml-1 text-white/80"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</span>` : ''}
-                            </div>
-                        </div>
-                        <button class="text-rose-400 hover:text-rose-300 p-1.5 transition shrink-0 hover:scale-110 bg-black/50 rounded-lg" onclick="removeEvent('${ev.id}')" title="Delete Event">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function addEventUI() {
-            const title = document.getElementById('newEventTitle').value;
-            const date = document.getElementById('newEventDate').value;
-            const startTime = document.getElementById('newEventStartTime').value;
-            const endTime = document.getElementById('newEventEndTime').value;
-            const location = document.getElementById('newEventLocation').value;
-            const desc = document.getElementById('newEventDesc').value;
-
-            if(!title || !date) return alert("Event Title and Date are required.");
-
-            const newEvent = {
-                id: 'evt_' + Date.now().toString(36),
-                title: title,
-                date: date,
-                startTime: startTime,
-                endTime: endTime,
-                location: location,
-                desc: desc
-            };
-
-            state.config.events.push(newEvent);
-
-            document.getElementById('newEventTitle').value = '';
-            document.getElementById('newEventDate').value = '';
-            document.getElementById('newEventStartTime').value = '';
-            document.getElementById('newEventEndTime').value = '';
-            document.getElementById('newEventLocation').value = '';
-            document.getElementById('newEventDesc').value = '';
-
-            renderAdminEvents();
-        }
-
-        function removeEvent(id) {
-            state.config.events = state.config.events.filter(e => e.id !== id);
-            renderAdminEvents();
-        }
-
-        async function saveAdminSettings() {
-            const btn = document.getElementById('saveBtn');
-            const loader = document.getElementById('saveLoader');
-
-            const updates = [
-                { key: 'PortalName', value: document.getElementById('setProfileName').value },
-                { key: 'PortalBio', value: document.getElementById('setProfileBio').value },
-                { key: 'SocialHandle', value: document.getElementById('setSocialHandle').value },
-                { key: 'TiktokHandle', value: document.getElementById('setTiktokHandle').value },
-                { key: 'AvatarUrl', value: document.getElementById('setAvatarUrl').value },
-                { key: 'LinksJson', value: JSON.stringify(state.config.links) },
-                { key: 'EventsJson', value: JSON.stringify(state.config.events) }
-            ];
-
-            btn.disabled = true; loader.style.display = "inline-block";
-
-            try {
-                const newPass = document.getElementById('setAdminPassword').value;
-                if (newPass.trim() !== '') {
-                    const { error: authError } = await _supabase.auth.updateUser({ password: newPass.trim() });
-                    if (authError) throw new Error("Failed to update password: " + authError.message);
-                }
-
-                for (const item of updates) {
-                    await _supabase.from('portal_config').upsert({ key: item.key, value: item.value }, { onConflict: 'key' });
-                }
-                location.reload();
-            } catch (e) {
-                alert(e.message || "Save Failed");
-                btn.disabled = false;
-                loader.style.display = "none";
-            }
-        }
-
-        function switchView(v) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            const targetView = document.getElementById(v + 'View');
-            targetView.classList.add('active');
-
-            gsap.fromTo(targetView, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 });
-            if(v === 'admin') loadAdminValues();
-            document.querySelector('.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function checkAuthAndShowAdmin() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) switchView('admin'); else showGate();
-        }
-
-        async function adminLogout() {
-            await _supabase.auth.signOut();
-            switchView('portal');
-        }
-
-        function showGate() {
-            const modal = document.getElementById('gateModal');
-            modal.style.display = 'flex';
-            gsap.fromTo("#gateBackdrop", { opacity: 0 }, { opacity: 1, duration: 0.3 });
-            gsap.fromTo("#gateCard", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.5)" });
-        }
-
-        function hideGate() {
-            gsap.to("#gateModal", {opacity: 0, duration: 0.2, onComplete: () => {
-                const modal = document.getElementById('gateModal');
-                modal.style.display = 'none';
-                modal.style.opacity = '1';
-                document.getElementById('adminEmail').value = "";
-                document.getElementById('adminPass').value = "";
-            }});
-        }
-
-        async function verifyAdmin() {
-            const email = document.getElementById('adminEmail').value.trim();
-            const pass = document.getElementById('adminPass').value;
-            const loader = document.getElementById('gateLoader');
-
-            if (!email || !pass) return alert("Please enter both admin email and password.");
-
-            loader.style.display = "inline-block";
-
-            try {
-                const { data, error } = await _supabase.auth.signInWithPassword({ email: email, password: pass });
-                if (error) alert(error.message);
-                else if (data.session) {
-                    hideGate();
-                    switchView('admin');
-                }
-            } catch (e) { alert("Error authenticating admin account."); }
-            loader.style.display = "none";
-        }
-
-        function showEvents() {
-            renderPublicEvents();
-            const modal = document.getElementById('eventsModal');
-            modal.style.display = 'flex';
-            gsap.fromTo("#eventsBackdrop", { opacity: 0 }, { opacity: 1, duration: 0.3 });
-            gsap.fromTo("#eventsCard", { scale: 0.9, opacity: 0, y: 30 }, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.2)" });
-        }
-
-        function hideEvents() {
-            gsap.to("#eventsModal", {opacity: 0, duration: 0.2, onComplete: () => {
-                const modal = document.getElementById('eventsModal');
-                modal.style.display = 'none';
-                modal.style.opacity = '1';
-            }});
-        }
-
-        function renderPublicEvents() {
-            const container = document.getElementById('publicEventsList');
-            const now = new Date();
-            now.setHours(0,0,0,0);
-
-            const upcomingEvents = state.config.events
-                .filter(ev => {
-                    const evDate = new Date(ev.date + 'T00:00:00');
-                    return evDate >= now;
-                })
-                .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            if (upcomingEvents.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center p-10 text-center opacity-70">
-                        <i data-lucide="calendar-x" class="w-12 h-12 text-white/80 mb-4 opacity-50"></i>
-                        <p class="text-white font-medium">No upcoming events right now.</p>
-                        <p class="text-xs text-white/70 mt-2">Check back later for new activities!</p>
-                    </div>`;
-                lucide.createIcons();
-                return;
-            }
-
-            container.innerHTML = upcomingEvents.map(ev => {
-                const evDate = new Date(ev.date + 'T00:00:00');
-                const month = evDate.toLocaleString('default', { month: 'short' }).toUpperCase();
-                const day = evDate.getDate();
-
-                let timeDisplay = '';
-                if (ev.startTime) {
-                    timeDisplay = `<div class="flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="clock" class="w-3.5 h-3.5 text-white/80"></i> ${formatTimeDisplay(ev.startTime)}${ev.endTime ? ' - ' + formatTimeDisplay(ev.endTime) : ''}</div>`;
-                }
-
-                return `
-                <div class="night-glass-card-subtle p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center group hover:border-white/50 transition-all duration-300">
-                    <div class="flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/10 border border-white/30 shadow-inner group-hover:scale-105 transition-transform">
-                        <span class="text-[10px] font-bold text-white/65 tracking-wider -mb-1">${month}</span>
-                        <span class="text-xl sm:text-2xl font-extrabold text-white">${day}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-base sm:text-lg font-bold text-white mb-1 leading-tight">${escapeHTML(ev.title)}</h4>
-                        <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs font-medium text-white/80 mb-2">
-                            ${timeDisplay}
-                            ${ev.location ? `<div class="flex items-center gap-1.5 truncate"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-white/80"></i> ${escapeHTML(ev.location)}</div>` : ''}
-                        </div>
-                        ${ev.desc ? `<p class="text-xs text-white/60 leading-relaxed">${escapeHTML(ev.desc)}</p>` : ''}
-                    </div>
-                    <div class="flex-shrink-0 flex flex-row sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                        <a href="${generateGoogleCalLink(ev)}" target="_blank" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-black/60 hover:bg-white/10 border border-white/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
-                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-white/80 group-hover/btn:text-white transition-colors"></i> Google Cal
-                        </a>
-                        <button onclick="downloadICS('${escapeHTML(ev.title)}', '${ev.date}', '${ev.startTime}', '${ev.endTime}', '${escapeHTML(ev.location)}', '${escapeHTML(ev.desc)}')" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-black/60 hover:bg-white/10 border border-white/30 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-colors group/btn">
-                            <i data-lucide="download" class="w-3.5 h-3.5 text-white/80 group-hover/btn:text-white transition-colors"></i> Apple (.ics)
-                        </button>
-                    </div>
-                </div>
-            `}).join('');
-
-            lucide.createIcons();
-        }
-
-        // Helpers
-        function formatDateDisplay(dateStr) {
-            if(!dateStr) return '';
-            const d = new Date(dateStr + 'T00:00:00');
-            return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        }
-
-        function formatTimeDisplay(timeStr) {
-            if(!timeStr) return '';
-            const [h, m] = timeStr.split(':');
-            const d = new Date();
-            d.setHours(parseInt(h), parseInt(m));
-            return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-        }
-
-        function generateGoogleCalLink(ev) {
-            const baseUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
-            const text = `&text=${encodeURIComponent(ev.title)}`;
-            const details = ev.desc ? `&details=${encodeURIComponent(ev.desc)}` : '';
-            const location = ev.location ? `&location=${encodeURIComponent(ev.location)}` : '';
-
-            let dates = '';
-            if (ev.startTime) {
-                const dStart = new Date(`${ev.date}T${ev.startTime}`);
-                const startStr = dStart.toISOString().replace(/-|:|\.\d\d\d/g, '');
-
-                let dEnd;
-                if (ev.endTime) {
-                    dEnd = new Date(`${ev.date}T${ev.endTime}`);
-                    // Handle case where end time crosses midnight
-                    if (dEnd < dStart) dEnd.setDate(dEnd.getDate() + 1);
-                } else {
-                    dEnd = new Date(dStart);
-                    dEnd.setHours(dEnd.getHours() + 2); // Default 2 hours if no end time provided
-                }
-                const endStr = dEnd.toISOString().replace(/-|:|\.\d\d\d/g, '');
-                dates = `&dates=${startStr}/${endStr}`;
-            } else {
-                const startStr = ev.date.replace(/-/g, '');
-                const d = new Date(ev.date + 'T00:00:00');
-                d.setDate(d.getDate() + 1);
-                const endStr = d.toISOString().split('T')[0].replace(/-/g, '');
-                dates = `&dates=${startStr}/${endStr}`;
-            }
-
-            return `${baseUrl}${text}${dates}${details}${location}`;
-        }
-
-        function downloadICS(title, date, startTime, endTime, location, desc) {
-            const now = new Date().toISOString().replace(/-|:|\.\d\d\d/g, '');
-            let dtstart, dtend;
-
-            if (startTime && startTime !== 'undefined') {
-                const dStart = new Date(`${date}T${startTime}`);
-                dtstart = dStart.toISOString().replace(/-|:|\.\d\d\d/g, '');
-
-                let dEnd;
-                if (endTime && endTime !== 'undefined') {
-                    dEnd = new Date(`${date}T${endTime}`);
-                    if (dEnd < dStart) dEnd.setDate(dEnd.getDate() + 1);
-                } else {
-                    dEnd = new Date(dStart);
-                    dEnd.setHours(dEnd.getHours() + 2);
-                }
-                dtend = dEnd.toISOString().replace(/-|:|\.\d\d\d/g, '');
-            } else {
-                dtstart = date.replace(/-/g, '');
-                const d = new Date(date + 'T00:00:00');
-                d.setDate(d.getDate() + 1);
-                dtend = d.toISOString().split('T')[0].replace(/-/g, '');
-                dtstart = `;VALUE=DATE:${dtstart}`;
-                dtend = `;VALUE=DATE:${dtend}`;
-            }
-
-            const safeTitle = (title || "").replace(/,/g, '\\,');
-            const safeDesc = (desc || "").replace(/\n/g, '\\n').replace(/,/g, '\\,');
-            const safeLocation = (location || "").replace(/,/g, '\\,');
-
-            const icsData = [
-                'BEGIN:VCALENDAR',
-                'VERSION:2.0',
-                'PRODID:-//CAB Portal//EN',
-                'BEGIN:VEVENT',
-                `UID:${Date.now()}@cabgcu`,
-                `DTSTAMP:${now}`,
-                (startTime && startTime !== 'undefined') ? `DTSTART:${dtstart}` : `DTSTART${dtstart}`,
-                (startTime && startTime !== 'undefined') ? `DTEND:${dtend}` : `DTEND${dtend}`,
-                `SUMMARY:${safeTitle}`,
-                `DESCRIPTION:${safeDesc}`,
-                `LOCATION:${safeLocation}`,
-                'END:VEVENT',
-                'END:VCALENDAR'
-            ].join('\n');
-
-            const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', `${safeTitle.replace(/ /g, '_')}.ics`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        lucide.createIcons();
     </script>
 </body>
 </html>
