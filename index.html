@@ -334,11 +334,11 @@
         .stars [data-lucide] { width: 22px; height: 22px; fill: #fbbf24; }
 
         /* ── CONNECT ── */
-        .connect { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 16px; align-items: stretch; }
+        .connect { display: grid; grid-template-columns: 1fr; gap: 16px; }
         .connect-social { padding: 32px; display: flex; flex-direction: column; }
         .connect-social h3 { margin: 0 0 8px; font-size: 26px; letter-spacing: -0.02em; }
         .connect-social p { margin: 0 0 24px; color: var(--ink-2); line-height: 1.6; font-size: 14px; }
-        .social-row { display: grid; gap: 10px; margin-top: auto; }
+        .social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
         .social {
             display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 18px;
             background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line); transition: border-color 0.2s, background 0.2s;
@@ -349,17 +349,27 @@
         .social small { display: block; color: var(--ink-3); font-size: 12px; font-weight: 500; }
         .social > [data-lucide] { margin-left: auto; color: var(--ink-3); }
 
-        .links-panel { padding: 32px; }
-        .links-panel h3 { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
-        .links-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .link-pill {
-            display: flex; align-items: center; gap: 10px; padding: 15px 18px; border-radius: 16px; min-width: 0;
-            background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)); border: 1px solid var(--line);
-            font-weight: 600; font-size: 14px; transition: transform 0.25s, border-color 0.25s;
+        /* ── QUICK LINKS (admin-managed sign-ups & links, right under the hero) ── */
+        section.block.links-block { padding-top: 24px; }
+        .links-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .link-card {
+            display: flex; align-items: center; gap: 14px; padding: 18px 18px 18px 16px; border-radius: 20px; min-width: 0;
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+            background-color: var(--glass); border: 1px solid var(--line);
+            backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+            transition: transform 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
         }
-        .link-pill:hover { transform: translateY(-2px); border-color: var(--line-strong); }
-        .link-pill .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .link-pill [data-lucide] { width: 15px; height: 15px; color: var(--ink-3); }
+        .link-card:hover { transform: translateY(-3px); border-color: rgba(255, 255, 255, 0.35); background-color: rgba(28, 28, 34, 0.7); }
+        .link-card .ico {
+            width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line-strong); font-size: 21px;
+        }
+        .link-card .ico [data-lucide] { width: 20px; height: 20px; }
+        .link-card .txt { flex: 1; min-width: 0; }
+        .link-card .t { display: block; font-weight: 700; font-size: 15px; line-height: 1.3; letter-spacing: -0.01em; }
+        .link-card .d { display: block; margin-top: 3px; font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .link-card > [data-lucide] { width: 18px; height: 18px; color: var(--ink-3); transition: transform 0.25s ease, color 0.25s ease; }
+        .link-card:hover > [data-lucide] { color: #fff; transform: translate(2px, -2px); }
 
         /* ── FOOTER ── */
         footer { padding: 64px 0 calc(40px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); margin-top: 40px; }
@@ -384,7 +394,7 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 960px) {
-            .events-grid, .explore-grid { grid-template-columns: 1fr 1fr; }
+            .events-grid, .explore-grid, .links-list { grid-template-columns: 1fr 1fr; }
             .moments-grid { grid-auto-rows: 150px; }
             .event-card.featured { grid-column: 1 / -1; }
             .explore-card:last-child { grid-column: 1 / -1; }
@@ -400,7 +410,7 @@
         }
         @media (max-width: 620px) {
             .wrap { padding: 0 16px; }
-            .events-grid, .explore-grid, .links-list { grid-template-columns: 1fr; }
+            .events-grid, .explore-grid, .links-list, .social-row { grid-template-columns: 1fr; }
             .moments-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 150px; gap: 8px; }
             .moments-grid.simple { grid-template-columns: 1fr 1fr; grid-auto-rows: 200px; }
             .moments-grid.simple[data-count="1"] .moment:first-child,
@@ -424,6 +434,7 @@
                 <span>Canyon Activities Board</span>
             </a>
             <nav class="nav-links" aria-label="Primary">
+                <a href="#links">Links</a>
                 <a href="#events">Events</a>
                 <a href="#moments" id="navMoments" hidden>Moments</a>
                 <a href="#explore">Explore</a>
@@ -439,6 +450,7 @@
     </header>
 
     <div class="mobile-menu" id="mobileMenu">
+        <a href="#links">Sign-ups &amp; Links <i data-lucide="arrow-right"></i></a>
         <a href="#events">Events <i data-lucide="arrow-right"></i></a>
         <a href="/calendar/">Full Calendar <i data-lucide="arrow-up-right"></i></a>
         <a href="#market">Student Market <i data-lucide="arrow-right"></i></a>
@@ -459,6 +471,7 @@
                 <p class="lead" id="heroBio">Student-run events, markets and moments that make GCU feel like home. Find out what's happening and get involved.</p>
                 <div class="hero-actions">
                     <a href="#events" class="btn btn-light"><i data-lucide="sparkles"></i> See what's on</a>
+                    <a href="#links" class="btn btn-glass"><i data-lucide="link"></i> Sign-ups &amp; links</a>
                     <a href="/calendar/" class="btn btn-glass"><i data-lucide="calendar-days"></i> Full calendar</a>
                 </div>
                 <a href="#events" class="next-up" id="nextUp">
@@ -472,6 +485,24 @@
                 </a>
             </div>
             <div class="scroll-hint" aria-hidden="true">Scroll</div>
+        </section>
+
+        <!-- QUICK LINKS -->
+        <section class="block links-block" id="links">
+            <div class="wrap">
+                <div class="section-head reveal">
+                    <div>
+                        <div class="eyebrow">Quick links</div>
+                        <h2>Sign up &amp; <span class="serif">get involved</span></h2>
+                        <p>Sign-ups, forms and everything else we're sharing right now.</p>
+                    </div>
+                </div>
+                <div class="links-list" id="linksList">
+                    <a href="/calendar/" class="link-card reveal"><span class="ico">📅</span><span class="txt"><span class="t">Events Calendar</span><span class="d">cabgcu.com/calendar</span></span><i data-lucide="arrow-up-right"></i></a>
+                    <a href="/studentmarkets/" class="link-card reveal"><span class="ico">🛍️</span><span class="txt"><span class="t">Student Market Application</span><span class="d">cabgcu.com/studentmarkets</span></span><i data-lucide="arrow-up-right"></i></a>
+                    <a href="/survey/" class="link-card reveal"><span class="ico">⭐</span><span class="txt"><span class="t">Event Survey</span><span class="d">cabgcu.com/survey</span></span><i data-lucide="arrow-up-right"></i></a>
+                </div>
+            </div>
         </section>
 
         <!-- EVENTS -->
@@ -616,14 +647,6 @@
                                 <div><span>TikTok</span><small id="tiktokHandle">@cabgcu</small></div>
                                 <i data-lucide="arrow-up-right"></i>
                             </a>
-                        </div>
-                    </div>
-                    <div class="glass links-panel reveal">
-                        <h3>Quick links</h3>
-                        <div class="links-list" id="linksList">
-                            <a href="/calendar/" class="link-pill"><span class="t">📅 Events Calendar</span><i data-lucide="chevron-right"></i></a>
-                            <a href="/studentmarkets/" class="link-pill"><span class="t">🛍️ Student Market Application</span><i data-lucide="chevron-right"></i></a>
-                            <a href="/survey/" class="link-pill"><span class="t">⭐ Event Survey</span><i data-lucide="chevron-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -778,12 +801,26 @@
 
         function renderLinks() {
             if (!LINKS.length) return; // keep built-in quick links
-            document.getElementById('linksList').innerHTML = LINKS.map((link, i) => `
-                <a href="${escapeHTML(safeUrl(link.url))}" target="_blank" rel="noopener" class="link-pill" onclick="trackLinkClick(${i})">
-                    <span class="t">${link.icon ? escapeHTML(link.icon) + ' ' : ''}${escapeHTML(link.title)}</span>
-                    <i data-lucide="chevron-right"></i>
-                </a>`).join('');
+            document.getElementById('linksList').innerHTML = LINKS.map((link, i) => {
+                const url = safeUrl(link.url);
+                return `
+                <a href="${escapeHTML(url)}" target="_blank" rel="noopener" class="link-card reveal" onclick="trackLinkClick(${i})">
+                    <span class="ico">${link.icon ? escapeHTML(link.icon) : '<i data-lucide="link"></i>'}</span>
+                    <span class="txt"><span class="t">${escapeHTML(link.title)}</span><span class="d">${escapeHTML(linkHost(url))}</span></span>
+                    <i data-lucide="arrow-up-right"></i>
+                </a>`;
+            }).join('');
             lucide.createIcons();
+            observeReveals();
+        }
+
+        function linkHost(url) {
+            if (url.startsWith('#')) return '';
+            try {
+                const u = new URL(url, location.href);
+                if (u.origin === location.origin) return location.host + u.pathname.replace(/\/$/, '');
+                return u.host.replace(/^www\./, '');
+            } catch (e) { return ''; }
         }
 
         // ── EVENTS ──
