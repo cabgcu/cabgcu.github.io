@@ -35,6 +35,12 @@
         </div>
 
         <div class="flex items-center gap-2">
+            <!-- Always-accessible Clear Results Button -->
+            <button id="btn-clear-all" type="button"
+                class="px-3 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-slate-300 hover:text-emerald-300 hover:border-emerald-500/40 text-xs font-medium transition-all active:scale-95">
+                Clear
+            </button>
+
             <!-- Toggle Activity Log Drawer -->
             <button id="btn-log-toggle" type="button"
                 class="px-3 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-slate-300 hover:text-sky-200 text-xs font-medium transition-all flex items-center gap-1.5 active:scale-95">
@@ -63,20 +69,28 @@
         </div>
     </div>
 
-    <!-- Centerpiece: Storytelling Interactive Orb -->
-    <main class="relative flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto px-4 py-2">
-        <!-- Responsive Orb Canvas -->
-        <div id="orb-stage" class="relative w-full h-[46vh] min-h-[300px] max-h-[480px] flex items-center justify-center cursor-pointer select-none touch-none">
+    <!-- Centerpiece: Storytelling Interactive Orb + Per-Site Bidirectional Traffic -->
+    <main class="relative flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto px-4 py-2 pb-8">
+        <!-- Responsive Orb & Site Traffic Canvas -->
+        <div id="orb-stage" class="relative w-full h-[58vh] min-h-[380px] max-h-[620px] flex items-center justify-center cursor-pointer select-none touch-none">
             <canvas id="orb-canvas" class="w-full h-full block"></canvas>
+
+            <!-- Subtle Traffic Flow Legend (shown once real site data is loaded) -->
+            <div id="flow-legend" class="hidden pointer-events-none absolute top-1 right-2 px-2.5 py-1 rounded-full bg-zinc-950/80 border border-zinc-800/80 text-[10px] text-slate-400 backdrop-blur-sm flex items-center gap-3">
+                <span id="live-badge" class="flex items-center gap-1.5 text-emerald-300 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Live (10m)</span></span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>In</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Out</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Failed</span>
+            </div>
 
             <!-- Subtle Bottom Hint (fades after interaction) -->
             <div id="orb-hint" class="pointer-events-none absolute bottom-1 px-3 py-1 rounded-full bg-black/70 border border-zinc-800/80 text-[11px] text-slate-400 backdrop-blur-sm transition-opacity duration-500">
-                Tap orb to sweep • Real data only
+                Tap orb to sweep • Tap a site node to inspect
             </div>
         </div>
 
         <!-- AI Agent Narrative Line (Tells the current visual story) -->
-        <div class="w-full max-w-xl text-center mt-1 mb-5 px-2">
+        <div class="w-full max-w-xl text-center mt-1 mb-4 px-2">
             <p id="story-headline" class="text-sm sm:text-base text-sky-100/95 font-light leading-relaxed min-h-[2.5rem] transition-opacity duration-300">
                 "Sign in to read the live request log."
             </p>
@@ -138,8 +152,7 @@
             <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-zinc-800/80">
                 <span class="text-xs font-medium uppercase tracking-wider text-sky-200">Alerts and live requests</span>
                 <div class="flex items-center gap-2">
-                    <button id="btn-sim-alert" type="button" class="hidden px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] transition-all active:scale-95">Simulate Alert</button>
-                    <button id="btn-clear-flags" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] transition-all active:scale-95">Clear Flags</button>
+                    <button id="btn-clear-flags" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] transition-all active:scale-95">Clear All</button>
                 </div>
             </div>
             <div id="log-list" class="max-h-36 overflow-y-auto space-y-2 font-mono text-[11px] pr-1">
@@ -148,20 +161,7 @@
         </aside>
     </main>
 
-    <!-- Minimal Bottom AI Command Bar -->
-    <footer class="relative z-20 w-full max-w-xl mx-auto px-4 pb-6 pt-2">
-        <form id="command-form" class="flex items-center gap-2 p-1.5 rounded-2xl bg-zinc-950/90 border border-zinc-800 focus-within:border-sky-400/50 focus-within:shadow-[0_0_24px_rgba(56,189,248,0.16)] transition-all backdrop-blur-xl">
-            <input id="command-input" type="text" autocomplete="off"
-                placeholder="Ask (e.g. 'alerts', 'failed logins', 'brevo', 'traffic', 'sweep')..."
-                class="flex-1 bg-transparent px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none">
-            <button type="submit"
-                class="px-4 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 text-xs font-medium transition-all active:scale-95">
-                Ask
-            </button>
-        </form>
-    </footer>
-
-    <!-- Interactive Storytelling Orb & Security Hub Logic -->
+    <!-- Interactive Storytelling Orb & Per-Site Traffic Hub Logic -->
     <script>
         (function () {
             'use strict';
@@ -174,6 +174,8 @@
             const globalStatus = document.getElementById('global-status');
             const storyHeadline = document.getElementById('story-headline');
             const orbHint = document.getElementById('orb-hint');
+            const flowLegend = document.getElementById('flow-legend');
+            const liveBadge = document.getElementById('live-badge');
             const focusButtons = document.querySelectorAll('.focus-btn');
             const detailMetrics = document.getElementById('detail-metrics');
             const detailActions = document.getElementById('detail-actions');
@@ -181,13 +183,11 @@
             const logToggleBtn = document.getElementById('btn-log-toggle');
             const logCountEl = document.getElementById('log-count');
             const logListEl = document.getElementById('log-list');
-            const simAlertBtn = document.getElementById('btn-sim-alert');
             const clearFlagsBtn = document.getElementById('btn-clear-flags');
+            const clearAllBtn = document.getElementById('btn-clear-all');
             const soundBtn = document.getElementById('btn-sound');
             const iconSoundOff = document.getElementById('icon-sound-off');
             const iconSoundOn = document.getElementById('icon-sound-on');
-            const commandForm = document.getElementById('command-form');
-            const commandInput = document.getElementById('command-input');
             const toastBox = document.getElementById('toast-box');
             const toastMessage = document.getElementById('toast-message');
 
@@ -201,17 +201,24 @@
             const dotBrevo = document.getElementById('dot-brevo');
             const dotSupabase = document.getElementById('dot-supabase');
 
+            // Harmonious accent hues assigned deterministically per site
+            const SITE_PALETTE = [196, 174, 218, 252, 160, 282, 186, 232];
+            // Only events within the last 10 minutes count as live connections (matches rpm10)
+            const LIVE_WINDOW_MS = 10 * 60 * 1000;
+
             // Visual & Animation State
             const orb = {
                 width: 0,
                 height: 0,
                 cx: 0,
                 cy: 0,
-                baseRadius: 110,
+                baseRadius: 150,
                 time: 0,
                 frame: 0,
                 // Story focus: 'overview' | 'traffic' | 'brevo' | 'supabase'
                 focus: 'overview',
+                selectedSite: null, // Optional site key when user clicks a site node
+                hoveredSite: null,
                 isScanning: false,
                 scanAngle: 0,
                 // Smoothly interpolated visual traits
@@ -233,6 +240,12 @@
                 pulses: [],
                 latticeNodes: [],
                 flowParticles: [],
+                siteNodes: [],      // Only sites with live connections within LIVE_WINDOW_MS
+                sitePackets: [],    // Real directional packets: Site -> Orb (IN) then Orb -> Site (OUT)
+                impactSparks: [],   // Subtle flashes when packets enter/leave the orb or site
+                seenEventKeys: new Set(),
+                hasSeededLive: false,
+                lastPruneTime: 0,
                 satellites: [
                     { key: 'traffic', angle: -Math.PI * 0.75, label: 'TRAFFIC' },
                     { key: 'brevo', angle: -Math.PI * 0.25, label: 'BREVO' },
@@ -241,18 +254,26 @@
                 // Audio & Timers
                 soundEnabled: false,
                 audioCtx: null,
-                toastTimer: null,
-                scanTimer: null
+                toastTimer: null
             };
 
-            // System Monitoring State (Ready to connect to live APIs/Webhooks)
+            // System Monitoring State (Connected to live Supabase Security Gateway)
             const GW = 'https://csutspaxezmjbqynpprt.supabase.co/functions/v1/security-gateway';
             const hub = {
-                traffic: { rpm: 0, req24: 0, failed24: 0, denied24: 0, alert: false, inMBs: 0, outMBs: 0, reqPerSec: 0, blocked: 0 },
+                traffic: { rpm: 0, req24: 0, failed24: 0, denied24: 0, alert: false },
                 brevo: { sent: 0, recipients: 0, flagged: 0, frozen: false },
-                supabase: { storageGB: 0, quotaGB: 0.5, dbMB: 0, latencyMs: 0, connections: 0, maxConnections: 0 },
-                alerts: [], recent: [], logs: [], by_app: {}, openCount: 0, ai: false, loaded: false, err: ''
+                supabase: { storageGB: 0, quotaGB: 0.5, dbMB: 0 },
+                alerts: [],
+                recent: [],
+                logs: [],
+                by_app: {},
+                openCount: 0,
+                ai: false,
+                loaded: false,
+                err: '',
+                clearedAt: Number(sessionStorage.getItem('sec_cleared_at') || 0)
             };
+
             /**
              * Non-blocking toast notification.
              */
@@ -293,34 +314,248 @@
             }
 
             /**
-             * Appends an event to the AI Security log.
-             */
-            function addLog(source, severity, message) {
-                const time = new Date().toTimeString().split(' ')[0];
-                hub.logs.unshift({ time, source, severity, message });
-                if (hub.logs.length > 25) hub.logs.pop();
-                renderLogList();
-            }
-
-            /**
              * Emits an energy ripple from the orb.
              */
             function triggerPulse(strength = 1.0, customHue = null) {
                 orb.pulses.push({
                     radius: orb.baseRadius * 0.85,
-                    maxRadius: orb.baseRadius * (2.2 + strength * 0.5),
-                    alpha: Math.min(0.95, 0.75 * strength),
+                    maxRadius: orb.baseRadius * (1.9 + strength * 0.45),
+                    alpha: Math.min(0.95, 0.72 * strength),
                     hue: customHue
                 });
-                playTone(280 + strength * 50, 0.28, 'triangle');
+                playTone(280 + strength * 50, 0.26, 'triangle');
                 if (orbHint) orbHint.classList.add('opacity-0');
             }
 
             /**
-             * Updates the orb's visual storytelling parameters based on current focus & alerts.
+             * Spawns a subtle spark at (x, y) when a packet arrives at the orb or site.
+             */
+            function spawnSpark(x, y, hue, isFailed = false) {
+                orb.impactSparks.push({
+                    x,
+                    y,
+                    radius: isFailed ? 4 : 3,
+                    maxRadius: isFailed ? 18 : 14,
+                    alpha: isFailed ? 0.95 : 0.8,
+                    hue
+                });
+            }
+
+            /**
+             * Formats a site/app key into a clean display label.
+             */
+            function formatSiteLabel(key) {
+                return String(key || 'unknown')
+                    .replace(/[-_]+/g, ' ')
+                    .replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            /**
+             * Rebuilds ONLY live site nodes (active within LIVE_WINDOW_MS and after clearedAt)
+             * from real hub.recent events, emitting real IN packets for newly arrived requests.
+             */
+            function rebuildSiteNodes() {
+                const now = Date.now();
+                const liveMap = {};
+                const freshEvents = [];
+
+                (hub.recent || []).forEach(r => {
+                    if (!r || !r.app) return;
+                    const tsMs = new Date(r.ts).getTime();
+                    if (!Number.isFinite(tsMs) || (now - tsMs) > LIVE_WINDOW_MS) return;
+                    if (hub.clearedAt && tsMs <= hub.clearedAt) return;
+
+                    const key = String(r.app);
+                    if (!liveMap[key]) {
+                        liveMap[key] = {
+                            key,
+                            label: formatSiteLabel(key),
+                            liveReq: 0,
+                            liveFailed: 0,
+                            failed: 0,
+                            openAlerts: 0,
+                            lastTs: tsMs,
+                            lastAction: r.action || 'request'
+                        };
+                    }
+                    liveMap[key].liveReq++;
+                    if (r.ok === false) {
+                        liveMap[key].liveFailed++;
+                        liveMap[key].failed++;
+                    }
+                    if (tsMs >= liveMap[key].lastTs) {
+                        liveMap[key].lastTs = tsMs;
+                        liveMap[key].lastAction = r.action || 'request';
+                    }
+
+                    const evKey = r.id != null
+                        ? String(r.id)
+                        : [r.ts, r.app, r.action || '', r.status || '', r.ip || ''].join('|');
+
+                    if (!orb.seenEventKeys.has(evKey)) {
+                        orb.seenEventKeys.add(evKey);
+                        freshEvents.push({ key, failed: r.ok === false, tsMs });
+                    }
+                });
+
+                // Keep seenEventKeys bounded over long sessions
+                if (orb.seenEventKeys.size > 400) {
+                    orb.seenEventKeys = new Set(Array.from(orb.seenEventKeys).slice(-200));
+                }
+
+                // Attach open alert counts only to currently live sites
+                (hub.alerts || []).forEach(a => {
+                    if (!a || !a.app || a.status !== 'open') return;
+                    const key = String(a.app);
+                    if (liveMap[key]) liveMap[key].openAlerts++;
+                });
+
+                const entries = Object.values(liveMap).sort((a, b) => b.lastTs - a.lastTs || b.liveReq - a.liveReq);
+                const maxLive = Math.max(1, ...entries.map(e => e.liveReq));
+
+                const prevByKey = {};
+                orb.siteNodes.forEach(n => { prevByKey[n.key] = n; });
+
+                const count = entries.length;
+                orb.siteNodes = entries.map((entry, idx) => {
+                    let angle;
+                    if (count === 1) {
+                        angle = 0;
+                    } else if (count === 2) {
+                        angle = idx === 0 ? Math.PI : 0;
+                    } else if (count === 3) {
+                        angle = [-Math.PI * 0.78, -Math.PI * 0.22, Math.PI * 0.5][idx];
+                    } else if (count === 4) {
+                        angle = [-Math.PI * 0.76, -Math.PI * 0.24, Math.PI * 0.24, Math.PI * 0.76][idx];
+                    } else {
+                        angle = -Math.PI / 2 + (idx / count) * Math.PI * 2;
+                    }
+
+                    const prev = prevByKey[entry.key];
+                    const volumeRatio = Math.max(0.2, Math.sqrt(entry.liveReq / maxLive));
+                    const failRatio = entry.liveReq > 0 ? Math.min(1, entry.liveFailed / entry.liveReq) : 0;
+
+                    return {
+                        ...entry,
+                        angle,
+                        hue: prev ? prev.hue : SITE_PALETTE[idx % SITE_PALETTE.length],
+                        volumeRatio,
+                        failRatio,
+                        x: prev ? prev.x : orb.cx,
+                        y: prev ? prev.y : orb.cy,
+                        radius: 15,
+                        pulse: prev ? prev.pulse : 0.6
+                    };
+                });
+
+                // Clear selectedSite if it is no longer live
+                if (orb.selectedSite && !orb.siteNodes.some(n => n.key === orb.selectedSite)) {
+                    orb.selectedSite = null;
+                }
+
+                // Update live legend badge
+                if (flowLegend) {
+                    flowLegend.classList.toggle('hidden', !hub.loaded);
+                }
+                if (liveBadge) {
+                    if (count > 0) {
+                        liveBadge.className = 'flex items-center gap-1.5 text-emerald-300 font-medium';
+                        liveBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>' + count + ' Live</span>';
+                    } else {
+                        liveBadge.className = 'flex items-center gap-1.5 text-slate-500 font-medium';
+                        liveBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span><span>No live connections</span>';
+                    }
+                }
+
+                updateOrbMetrics();
+
+                // Emit real packets for newly arrived live events (capped per poll so bursts stay clean)
+                const toEmit = orb.hasSeededLive ? freshEvents.slice(0, 14) : freshEvents.slice(0, 8);
+                toEmit.forEach((ev, idx) => {
+                    const site = orb.siteNodes.find(s => s.key === ev.key);
+                    if (!site) return;
+                    setTimeout(() => {
+                        if (orb.siteNodes.some(s => s.key === site.key)) {
+                            spawnSitePacket(site, 'in', 0, ev.failed);
+                        }
+                    }, idx * 140);
+                });
+                orb.hasSeededLive = true;
+            }
+
+            /**
+             * Spawns a single real directional traffic packet between a live site and the orb.
+             * dir: 'in' (Site -> Orb request) | 'out' (Orb -> Site response)
+             */
+            function spawnSitePacket(site, dir, startT = 0, isFailedOverride = null) {
+                const isFailed = isFailedOverride !== null
+                    ? Boolean(isFailedOverride)
+                    : (dir === 'in' && site.liveFailed > 0);
+                const baseSpeed = 0.011 + site.volumeRatio * 0.006;
+                orb.sitePackets.push({
+                    siteKey: site.key,
+                    dir,
+                    t: startT,
+                    speed: orb.focus === 'traffic' ? baseSpeed * 1.2 : baseSpeed,
+                    failed: isFailed,
+                    size: isFailed ? 3.5 : (dir === 'in' ? 2.8 : 2.4),
+                    hue: isFailed ? 358 : (dir === 'in' ? site.hue : 162)
+                });
+            }
+
+            /**
+             * Computes the quadratic Bezier control point for a dual-lane conduit
+             * between a live site node and the orb edge.
+             */
+            function getConduitGeometry(site, cx, cy, orbR, dir) {
+                const dx = site.x - cx;
+                const dy = site.y - cy;
+                const dist = Math.hypot(dx, dy) || 1;
+                const ux = dx / dist;
+                const uy = dy / dist;
+
+                // Perpendicular normal to separate IN lane and OUT lane cleanly
+                const nx = -uy;
+                const ny = ux;
+
+                // Start/end points slightly outside the orb core and site node
+                const orbEdgeX = cx + ux * (orbR * 0.92);
+                const orbEdgeY = cy + uy * (orbR * 0.92);
+                const siteEdgeX = site.x - ux * (site.radius + 4);
+                const siteEdgeY = site.y - uy * (site.radius + 4);
+
+                // Curve offset creates two distinct glowing lanes (IN curves one side, OUT curves the other)
+                const laneSign = dir === 'in' ? 1 : -1;
+                const bend = Math.min(34, dist * 0.19) * laneSign;
+                const midX = (orbEdgeX + siteEdgeX) * 0.5 + nx * bend;
+                const midY = (orbEdgeY + siteEdgeY) * 0.5 + ny * bend;
+
+                if (dir === 'in') {
+                    return { x0: siteEdgeX, y0: siteEdgeY, cx: midX, cy: midY, x1: orbEdgeX, y1: orbEdgeY };
+                }
+                return { x0: orbEdgeX, y0: orbEdgeY, cx: midX, cy: midY, x1: siteEdgeX, y1: siteEdgeY };
+            }
+
+            /**
+             * Evaluates a quadratic Bezier curve at parameter t in [0, 1].
+             */
+            function evalQuadBezier(g, t) {
+                const inv = 1 - t;
+                return {
+                    x: inv * inv * g.x0 + 2 * inv * t * g.cx + t * t * g.x1,
+                    y: inv * inv * g.y0 + 2 * inv * t * g.cy + t * t * g.y1
+                };
+            }
+
+            /**
+             * Updates the orb's visual storytelling parameters based on current focus,
+             * live red site ratio, and active alerts.
              */
             function syncOrbVisualStory() {
                 const hasAlert = hub.brevo.flagged > 0 || hub.traffic.alert;
+                const totalSites = orb.siteNodes.length;
+                const redSites = orb.siteNodes.filter(s => s.liveFailed > 0).length;
+                const redRatio = totalSites > 0 ? redSites / totalSites : 0;
 
                 if (orb.isScanning) {
                     orb.targetHue = 200;
@@ -330,8 +565,39 @@
                     return;
                 }
 
+                if (orb.selectedSite) {
+                    const site = orb.siteNodes.find(s => s.key === orb.selectedSite);
+                    if (site) {
+                        orb.targetHue = site.failed > 0 ? 358 : (site.openAlerts > 0 ? 38 : site.hue);
+                        orb.targetSpeed = 1.3;
+                        orb.targetTurbulence = site.failed > 0 ? 0.22 : 0.14;
+                        orb.targetScale = 1.02;
+                        return;
+                    }
+                }
+
+                // Shift the central orb based on the proportion of failing (red) live site nodes
+                if ((orb.focus === 'overview' || orb.focus === 'traffic') && totalSites > 0) {
+                    if (redRatio > 0.5) {
+                        // Most small orbs are red -> big orb turns red
+                        orb.targetHue = 358;
+                        orb.targetSpeed = 1.85;
+                        orb.targetTurbulence = 0.25;
+                        orb.targetScale = 1.04;
+                        return;
+                    }
+                    if (redRatio === 0.5) {
+                        // Half of the small orbs are red -> big orb turns yellow
+                        orb.targetHue = 48;
+                        orb.targetSpeed = 1.4;
+                        orb.targetTurbulence = 0.19;
+                        orb.targetScale = 1.02;
+                        return;
+                    }
+                }
+
                 if (orb.focus === 'traffic') {
-                    orb.targetHue = hub.traffic.alert ? 355 : 192;
+                    orb.targetHue = hub.traffic.alert ? 358 : 192;
                     orb.targetSpeed = hub.traffic.alert ? 2.1 : 1.35;
                     orb.targetTurbulence = hub.traffic.alert ? 0.26 : 0.16;
                     orb.targetScale = 1.02;
@@ -339,14 +605,13 @@
                     orb.targetHue = hub.brevo.flagged > 0 ? 38 : 205;
                     orb.targetSpeed = hub.brevo.flagged > 0 ? 1.6 : 0.9;
                     orb.targetTurbulence = hub.brevo.flagged > 0 ? 0.24 : 0.11;
-                    orb.targetScale = hub.brevo.flagged > 0 ? 1.05 : 1.0;
+                    orb.targetScale = hub.brevo.flagged > 0 ? 1.04 : 1.0;
                 } else if (orb.focus === 'supabase') {
                     orb.targetHue = 178;
                     orb.targetSpeed = 0.85;
                     orb.targetTurbulence = 0.10;
                     orb.targetScale = 0.98;
                 } else {
-                    // Overview: Luminous Blue (with subtle warning tempo if an alert exists)
                     orb.targetHue = 205;
                     orb.targetSpeed = hasAlert ? 1.15 : 0.85;
                     orb.targetTurbulence = hasAlert ? 0.16 : 0.11;
@@ -359,9 +624,11 @@
              */
             function setFocus(newFocus, customNarrative = null) {
                 orb.focus = newFocus;
+                if (newFocus !== 'traffic' && newFocus !== 'overview') {
+                    orb.selectedSite = null;
+                }
                 syncOrbVisualStory();
 
-                // Update pill styling
                 focusButtons.forEach(btn => {
                     const isSelected = btn.dataset.focus === newFocus;
                     const isBrevoAlert = btn.dataset.focus === 'brevo' && hub.brevo.flagged > 0;
@@ -371,133 +638,350 @@
                         if (isBrevoAlert) {
                             btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-amber-500/15 border-amber-400/50 text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.12)]';
                         } else if (isTrafficAlert) {
-                            btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-rose-500/15 border-rose-400/50 text-rose-100';
+                            btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-red-500/15 border-red-400/50 text-red-100';
                         } else {
                             btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-sky-500/15 border-sky-400/45 text-sky-100 shadow-[0_0_20px_rgba(56,189,248,0.14)]';
                         }
                     } else {
-                        const alertBorder = isBrevoAlert ? 'border-amber-500/30' : isTrafficAlert ? 'border-rose-500/35' : 'border-zinc-800/90';
+                        const alertBorder = isBrevoAlert ? 'border-amber-500/30' : isTrafficAlert ? 'border-red-500/35' : 'border-zinc-800/90';
                         btn.className = `focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-zinc-950/90 ${alertBorder} text-slate-300 hover:border-zinc-700`;
                     }
                 });
 
                 renderStoryAndStrip(customNarrative);
-                triggerPulse(0.9);
+                triggerPulse(0.85);
             }
 
-            const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+            // HTML escape helper
+            const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
             let token = sessionStorage.getItem('sec_token') || '';
+
+            /**
+             * Calls the live Supabase Security Gateway.
+             */
             async function api(action, extra) {
-                const r = await fetch(GW, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify({ action, ...(extra || {}) }) });
+                const r = await fetch(GW, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: 'Bearer ' + token } : {})
+                    },
+                    body: JSON.stringify({ action, ...(extra || {}) })
+                });
                 const j = await r.json().catch(() => ({}));
-                if (r.status === 401 && action !== 'login') { token = ''; sessionStorage.removeItem('sec_token'); showLogin(); throw new Error('auth'); }
+                if (r.status === 401 && action !== 'login') {
+                    token = '';
+                    sessionStorage.removeItem('sec_token');
+                    showLogin();
+                    throw new Error('auth');
+                }
                 return { status: r.status, body: j };
             }
+
+            /**
+             * Applies live gateway response into hub state and rebuilds live site nodes.
+             */
             function applyData(d) {
-                if (!d || d.error) { hub.err = (d && d.error) || 'no data'; return; }
-                hub.loaded = true; hub.err = '';
-                hub.traffic.rpm = d.rpm10; hub.traffic.req24 = d.req24; hub.traffic.failed24 = d.failed24; hub.traffic.denied24 = d.denied24;
-                hub.traffic.alert = (d.alerts || []).some(a => a.status === 'open' && a.rule !== 'failed_login' && (a.severity === 'high' || a.severity === 'critical') && !/email|sender/.test(a.rule));
-                hub.brevo.sent = d.emails24; hub.brevo.recipients = d.recipients24; hub.brevo.flagged = d.email_flags; hub.brevo.frozen = d.email_frozen;
-                hub.supabase.dbMB = d.db_mb; hub.supabase.storageGB = d.db_mb / 1024;
-                hub.alerts = d.alerts || []; hub.recent = d.recent || []; hub.ai = d.ai_armed; hub.by_app = d.by_app || {};
-                hub.openCount = hub.alerts.filter(a => a.status === 'open').length;
-                hub.logs = hub.recent.map(r => ({ time: new Date(r.ts).toLocaleTimeString([], {hour12:false}), source: String(r.app).toUpperCase(), severity: r.ok === false ? 'WARN' : 'INFO', message: esc(r.action || 'request') + ' ' + esc(r.status) + (r.username ? ' user ' + esc(r.username) : '') + (r.subject ? ' "' + esc(r.subject) + '"' : '') + (r.ip ? ' from ' + esc(r.ip) : '') }));
+                if (!d || d.error) {
+                    hub.err = (d && d.error) || 'no data';
+                    return;
+                }
+                hub.loaded = true;
+                hub.err = '';
+                hub.traffic.rpm = d.rpm10 || 0;
+                hub.traffic.req24 = d.req24 || 0;
+                hub.traffic.failed24 = d.failed24 || 0;
+                hub.traffic.denied24 = d.denied24 || 0;
+                hub.traffic.alert = (d.alerts || []).some(a =>
+                    a.status === 'open' &&
+                    a.rule !== 'failed_login' &&
+                    (a.severity === 'high' || a.severity === 'critical') &&
+                    !/email|sender/.test(a.rule)
+                );
+                hub.brevo.sent = d.emails24 || 0;
+                hub.brevo.recipients = d.recipients24 || 0;
+                hub.brevo.flagged = d.email_flags || 0;
+                hub.brevo.frozen = Boolean(d.email_frozen);
+                hub.supabase.dbMB = d.db_mb || 0;
+                hub.supabase.storageGB = hub.supabase.dbMB / 1024;
+                hub.ai = Boolean(d.ai_armed);
+                hub.by_app = d.by_app || {};
+
+                // Only keep open alerts (reviewed alerts stay cleared)
+                hub.alerts = (d.alerts || []).filter(a => a.status === 'open');
+                hub.openCount = hub.alerts.length;
+
+                // Keep only events after clearedAt
+                hub.recent = (d.recent || []).filter(r => {
+                    if (!hub.clearedAt) return true;
+                    const tsMs = new Date(r.ts).getTime();
+                    return Number.isFinite(tsMs) && tsMs > hub.clearedAt;
+                });
+
+                hub.logs = hub.recent.map(r => ({
+                    time: new Date(r.ts).toLocaleTimeString([], { hour12: false }),
+                    source: String(r.app || 'APP').toUpperCase(),
+                    severity: r.ok === false ? 'WARN' : 'INFO',
+                    message: esc(r.action || 'request') + ' ' + esc(r.status) +
+                        (r.username ? ' user ' + esc(r.username) : '') +
+                        (r.subject ? ' "' + esc(r.subject) + '"' : '') +
+                        (r.ip ? ' from ' + esc(r.ip) : '')
+                }));
+
+                rebuildSiteNodes();
             }
+
+            /**
+             * Polls the security gateway for fresh live data.
+             */
             async function refresh(label) {
-                try { const r = await api('summary'); applyData(r.body); } catch (e) { return; }
-                syncOrbVisualStory(); renderStoryAndStrip(); renderLogList();
+                try {
+                    const r = await api('summary');
+                    applyData(r.body);
+                } catch (e) {
+                    return;
+                }
+                syncOrbVisualStory();
+                renderStoryAndStrip();
+                renderLogList();
                 if (label) showToast(label);
             }
+
+            /**
+             * Updates header status, focus pills, narrative headline, and detail strip.
+             */
             function renderStoryAndStrip(customNarrative = null) {
                 const { traffic, brevo, supabase } = hub;
                 const open = hub.openCount || 0;
                 const dot = (c) => 'w-1.5 h-1.5 rounded-full ' + c;
-                if (!hub.loaded) { globalStatus.textContent = hub.err ? 'Security Monitor • ' + hub.err : 'Security Monitor • loading real data...'; storyHeadline.textContent = customNarrative || '"Reading the live request log..."'; return; }
-                globalDot.className = 'w-2.5 h-2.5 rounded-full ' + (open ? 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]' : 'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]') + ' animate-pulse';
-                globalStatus.textContent = open ? ('Security Monitor • ' + open + ' open alert' + (open > 1 ? 's' : '')) : 'Security Monitor • No open alerts';
+
+                if (!hub.loaded) {
+                    globalStatus.textContent = hub.err ? 'Security Monitor • ' + hub.err : 'Security Monitor • loading real data...';
+                    storyHeadline.textContent = customNarrative || '"Reading the live request log..."';
+                    return;
+                }
+
+                const redSites = orb.siteNodes.filter(s => s.liveFailed > 0).length;
+                const totalSites = orb.siteNodes.length;
+                const majorityRed = totalSites > 0 && (redSites / totalSites) > 0.5;
+
+                globalDot.className = 'w-2.5 h-2.5 rounded-full ' +
+                    (majorityRed ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.95)]'
+                        : open ? 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]'
+                        : 'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]') + ' animate-pulse';
+
+                globalStatus.textContent = open
+                    ? ('Security Monitor • ' + open + ' open alert' + (open > 1 ? 's' : ''))
+                    : 'Security Monitor • No open alerts';
+
                 pillOverview.textContent = open ? open + ' Open' : 'All Quiet';
-                dotOverview.className = dot(open ? 'bg-amber-400 animate-ping' : 'bg-emerald-400');
-                pillTraffic.textContent = traffic.req24 + ' req / 24h';
-                dotTraffic.className = dot(traffic.alert ? 'bg-rose-400 animate-ping' : 'bg-emerald-400');
+                dotOverview.className = dot(majorityRed ? 'bg-red-500 animate-ping' : open ? 'bg-amber-400 animate-ping' : 'bg-emerald-400');
+
+                pillTraffic.textContent = orb.siteNodes.length > 0
+                    ? (orb.siteNodes.length + ' live • ' + traffic.rpm + '/m')
+                    : (traffic.req24 + ' req / 24h');
+                dotTraffic.className = dot((traffic.alert || majorityRed) ? 'bg-red-500 animate-ping' : 'bg-emerald-400');
+
                 pillBrevo.textContent = brevo.sent + ' sent' + (brevo.flagged ? ', ' + brevo.flagged + ' flagged' : '');
                 pillBrevo.className = 'text-xs font-mono mt-1 ' + (brevo.flagged ? 'text-amber-200' : 'text-emerald-300');
                 dotBrevo.className = dot(brevo.flagged ? 'bg-amber-400 animate-ping' : 'bg-emerald-400');
+
                 pillSupabase.textContent = supabase.dbMB + ' MB DB';
                 dotSupabase.className = dot('bg-emerald-400');
+
                 const m = (k, v, c) => '<div><span class="text-slate-500">' + k + '</span> <span class="' + (c || 'text-sky-200') + ' ml-1">' + v + '</span></div>';
-                const btn = (id, t) => '<button id="' + id + '" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-200 text-xs transition-all">' + t + '</button>';
+                const btn = (id, t) => '<button id="' + id + '" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-200 text-xs transition-all active:scale-95">' + t + '</button>';
+
+                // Selected live site view
+                if (orb.selectedSite) {
+                    const site = orb.siteNodes.find(s => s.key === orb.selectedSite);
+                    if (site) {
+                        storyHeadline.textContent = customNarrative || (
+                            '"' + site.label + ' has ' + site.liveReq + ' live request' + (site.liveReq === 1 ? '' : 's') +
+                            ' in the last 10m' + (site.liveFailed ? ' (' + site.liveFailed + ' failed)' : '') +
+                            '. Latest: ' + esc(site.lastAction) + '."'
+                        );
+                        detailMetrics.innerHTML =
+                            m('SITE', esc(site.label)) +
+                            m('LIVE (10M)', site.liveReq) +
+                            m('FAILED', site.liveFailed, site.liveFailed ? 'text-red-400 font-semibold' : 'text-emerald-300') +
+                            m('ALERTS', site.openAlerts, site.openAlerts ? 'text-amber-300' : 'text-emerald-300');
+                        detailActions.innerHTML = btn('ctx-deselect', 'All Live Sites');
+                        const bd = document.getElementById('ctx-deselect');
+                        if (bd) bd.onclick = () => {
+                            orb.selectedSite = null;
+                            syncOrbVisualStory();
+                            renderStoryAndStrip();
+                        };
+                        return;
+                    }
+                }
+
                 const topAlert = hub.alerts.find(a => a.status === 'open');
                 if (orb.focus === 'traffic') {
-                    storyHeadline.textContent = customNarrative || ('"' + traffic.req24 + ' real requests in the last 24h across all apps, ' + traffic.failed24 + ' failed, ' + traffic.denied24 + ' denied. Last 10 minutes: ' + traffic.rpm + ' requests per minute."');
-                    detailMetrics.innerHTML = m('24H', traffic.req24) + m('FAILED', traffic.failed24, traffic.failed24 ? 'text-amber-300' : 'text-emerald-300') + m('DENIED', traffic.denied24, traffic.denied24 ? 'text-amber-300' : 'text-emerald-300') + m('PER MIN', traffic.rpm);
+                    storyHeadline.textContent = customNarrative || (
+                        '"' + orb.siteNodes.length + ' live site connection' + (orb.siteNodes.length === 1 ? '' : 's') +
+                        ' in the last 10 minutes (' + traffic.rpm + ' req/min). 24h total: ' + traffic.req24 +
+                        ' requests, ' + traffic.failed24 + ' failed, ' + traffic.denied24 + ' denied."'
+                    );
+                    detailMetrics.innerHTML =
+                        m('LIVE SITES', orb.siteNodes.length) +
+                        m('PER MIN', traffic.rpm) +
+                        m('FAILED 24H', traffic.failed24, traffic.failed24 ? 'text-red-400 font-semibold' : 'text-emerald-300') +
+                        m('DENIED 24H', traffic.denied24, traffic.denied24 ? 'text-red-400' : 'text-emerald-300');
                     detailActions.innerHTML = btn('ctx-scan', 'Run Sweep');
                 } else if (orb.focus === 'brevo') {
-                    storyHeadline.textContent = customNarrative || ('"' + brevo.sent + ' app emails (' + brevo.recipients + ' recipients) sent through the gateways in 24h. ' + (brevo.flagged ? brevo.flagged + ' flagged.' : 'None flagged.') + (brevo.frozen ? ' App email is FROZEN.' : '') + ' Counts come from the gateway send log, not the Brevo dashboard."');
-                    detailMetrics.innerHTML = m('SENT 24H', brevo.sent) + m('RECIPIENTS', brevo.recipients) + m('FLAGS', brevo.flagged, brevo.flagged ? 'text-amber-300' : 'text-emerald-300') + m('EMAIL', brevo.frozen ? 'FROZEN' : 'live', brevo.frozen ? 'text-rose-300' : 'text-emerald-300');
+                    storyHeadline.textContent = customNarrative || (
+                        '"' + brevo.sent + ' app emails (' + brevo.recipients + ' recipients) sent through the gateways in 24h. ' +
+                        (brevo.flagged ? brevo.flagged + ' flagged.' : 'None flagged.') +
+                        (brevo.frozen ? ' App email is FROZEN.' : '') + '"'
+                    );
+                    detailMetrics.innerHTML =
+                        m('SENT 24H', brevo.sent) +
+                        m('RECIPIENTS', brevo.recipients) +
+                        m('FLAGS', brevo.flagged, brevo.flagged ? 'text-amber-300' : 'text-emerald-300') +
+                        m('EMAIL', brevo.frozen ? 'FROZEN' : 'live', brevo.frozen ? 'text-red-400' : 'text-emerald-300');
                     detailActions.innerHTML = btn('ctx-scan', 'Run Sweep');
                 } else if (orb.focus === 'supabase') {
-                    storyHeadline.textContent = customNarrative || ('"The database is ' + supabase.dbMB + ' MB. The ring shows it against 500 MB, which assumes the free plan (not verified)."');
-                    detailMetrics.innerHTML = m('DB SIZE', supabase.dbMB + ' MB') + m('AI WATCH', hub.ai ? 'armed' : 'off', hub.ai ? 'text-emerald-300' : 'text-amber-300');
+                    storyHeadline.textContent = customNarrative || (
+                        '"The database is ' + supabase.dbMB + ' MB. The ring shows it against 500 MB."'
+                    );
+                    detailMetrics.innerHTML =
+                        m('DB SIZE', supabase.dbMB + ' MB') +
+                        m('AI WATCH', hub.ai ? 'armed' : 'off', hub.ai ? 'text-emerald-300' : 'text-amber-300');
                     detailActions.innerHTML = btn('ctx-scan', 'Refresh');
                 } else {
-                    const per = Object.entries(hub.by_app || {}).map(([k, v]) => k + ' ' + v.req + (v.failed ? ' (' + v.failed + ' failed)' : '')).join(', ');
-                    storyHeadline.textContent = customNarrative || (open ? ('"' + open + ' open alert' + (open > 1 ? 's' : '') + '. Latest: ' + esc(topAlert.summary) + '"') : ('"All quiet. ' + traffic.req24 + ' requests in 24h (' + (per || 'none yet') + '). Rules run every 5 minutes, and the AI pass reads batches of 20+ new events."'));
-                    detailMetrics.innerHTML = m('REQUESTS 24H', traffic.req24) + m('OPEN ALERTS', open, open ? 'text-amber-300' : 'text-emerald-300') + m('AI', hub.ai ? 'armed' : 'off', hub.ai ? 'text-emerald-300' : 'text-amber-300');
-                    detailActions.innerHTML = open ? btn('ctx-clear', 'Mark All Reviewed') : btn('ctx-scan', 'Security Sweep');
+                    const liveSummary = orb.siteNodes.length
+                        ? orb.siteNodes.map(s => s.label + ' (' + s.liveReq + (s.liveFailed ? ', ' + s.liveFailed + ' failed' : '') + ')').join(', ')
+                        : 'no live connections right now';
+                    storyHeadline.textContent = customNarrative || (
+                        open
+                            ? ('"' + open + ' open alert' + (open > 1 ? 's' : '') + '. Latest: ' + esc(topAlert.summary) + '"')
+                            : ('"All quiet. Live (10m): ' + liveSummary + '."')
+                    );
+                    detailMetrics.innerHTML =
+                        m('LIVE SITES', orb.siteNodes.length) +
+                        m('OPEN ALERTS', open, open ? 'text-amber-300' : 'text-emerald-300') +
+                        m('AI', hub.ai ? 'armed' : 'off', hub.ai ? 'text-emerald-300' : 'text-amber-300');
+                    detailActions.innerHTML = open ? btn('ctx-clear', 'Clear All') : btn('ctx-scan', 'Security Sweep');
                 }
-                const bs = document.getElementById('ctx-scan'), bc = document.getElementById('ctx-clear');
+
+                const bs = document.getElementById('ctx-scan');
+                const bc = document.getElementById('ctx-clear');
                 if (bs) bs.onclick = runSecuritySweep;
                 if (bc) bc.onclick = clearAllFlags;
             }
+
+            /**
+             * Renders the expandable activity log drawer.
+             */
             function renderLogList() {
-                const al = hub.alerts.slice(0, 8).map(a => '<div class="flex items-start gap-2 text-slate-300"><span class="text-slate-600 shrink-0">' + new Date(a.ts).toLocaleString([], {hour12:false}) + '</span><span class="' + (a.severity === 'critical' || a.severity === 'high' ? 'text-rose-300' : 'text-amber-300') + ' shrink-0 font-semibold">ALERT ' + esc(a.app).toUpperCase() + (a.status === 'reviewed' ? ' (reviewed)' : '') + '</span><span class="leading-snug">' + esc(a.summary) + '</span></div>').join('');
-                const ev = hub.logs.map(i => '<div class="flex items-start gap-2 text-slate-300"><span class="text-slate-600 shrink-0">' + i.time + '</span><span class="' + (i.severity === 'WARN' ? 'text-rose-300' : 'text-sky-300') + ' shrink-0 font-semibold">' + i.source + '</span><span class="leading-snug">' + i.message + '</span></div>').join('');
+                const al = hub.alerts.slice(0, 8).map(a =>
+                    '<div class="flex items-start gap-2 text-slate-300">' +
+                    '<span class="text-slate-600 shrink-0">' + new Date(a.ts).toLocaleString([], { hour12: false }) + '</span>' +
+                    '<span class="' + (a.severity === 'critical' || a.severity === 'high' ? 'text-red-400' : 'text-amber-300') + ' shrink-0 font-semibold">ALERT ' + esc(a.app).toUpperCase() + '</span>' +
+                    '<span class="leading-snug">' + esc(a.summary) + '</span></div>'
+                ).join('');
+                const ev = hub.logs.map(i =>
+                    '<div class="flex items-start gap-2 text-slate-300">' +
+                    '<span class="text-slate-600 shrink-0">' + i.time + '</span>' +
+                    '<span class="' + (i.severity === 'WARN' ? 'text-red-400' : 'text-sky-300') + ' shrink-0 font-semibold">' + i.source + '</span>' +
+                    '<span class="leading-snug">' + i.message + '</span></div>'
+                ).join('');
                 logCountEl.textContent = hub.openCount || 0;
-                logListEl.innerHTML = (al || ev) ? al + ev : '<div class="text-slate-500">No events yet.</div>';
+                logListEl.innerHTML = (al || ev) ? al + ev : '<div class="text-slate-500">Cleared. Waiting for new live events.</div>';
             }
+
+            /**
+             * Runs detection rules on the live log.
+             */
             async function runSecuritySweep() {
                 if (orb.isScanning) return;
-                orb.isScanning = true; syncOrbVisualStory(); triggerPulse(1.3, 198);
+                orb.isScanning = true;
+                syncOrbVisualStory();
+                triggerPulse(1.3, 198);
                 storyHeadline.textContent = '"Running the detection rules on the live log..."';
-                try { const r = await api('sweep'); applyData(r.body); } catch (e) {}
-                orb.isScanning = false; syncOrbVisualStory(); renderStoryAndStrip(); renderLogList(); triggerPulse(1.1); showToast('Sweep complete');
+                try {
+                    const r = await api('sweep');
+                    applyData(r.body);
+                } catch (e) {}
+                orb.isScanning = false;
+                syncOrbVisualStory();
+                renderStoryAndStrip();
+                renderLogList();
+                triggerPulse(1.1);
+                showToast('Sweep complete');
             }
+
+            /**
+             * Acknowledges open alerts and wipes all displayed live connections,
+             * packets, sparks, and activity logs until new traffic arrives.
+             */
             async function clearAllFlags() {
-                for (const a of hub.alerts.filter(x => x.status === 'open')) { try { const r = await api('ack', { id: a.id }); applyData(r.body); } catch (e) { break; } }
-                syncOrbVisualStory(); renderStoryAndStrip(); renderLogList(); showToast('Alerts marked reviewed');
+                const openAlerts = hub.alerts.filter(x => x.status === 'open');
+                for (const a of openAlerts) {
+                    try {
+                        await api('ack', { id: a.id });
+                    } catch (e) {
+                        break;
+                    }
+                }
+                hub.clearedAt = Date.now();
+                sessionStorage.setItem('sec_cleared_at', String(hub.clearedAt));
+                hub.alerts = [];
+                hub.recent = [];
+                hub.logs = [];
+                hub.openCount = 0;
+
+                // Wipe live orb visuals cleanly
+                orb.siteNodes = [];
+                orb.sitePackets = [];
+                orb.impactSparks = [];
+                orb.selectedSite = null;
+                orb.hoveredSite = null;
+
+                if (liveBadge) {
+                    liveBadge.className = 'flex items-center gap-1.5 text-slate-500 font-medium';
+                    liveBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span><span>No live connections</span>';
+                }
+
+                activityDrawer.classList.add('hidden');
+                updateOrbMetrics();
+                syncOrbVisualStory();
+                renderStoryAndStrip('"Cleared. Waiting for new live connections..."');
+                renderLogList();
+                triggerPulse(0.9, 162);
+                showToast('Cleared all results');
             }
-            function simulateAlert() { showToast('Real data only'); }
-            function handleQuery(raw) {
-                const q = raw.toLowerCase();
-                if (/brevo|mail|email/.test(q)) setFocus('brevo');
-                else if (/traffic|request|web/.test(q)) setFocus('traffic');
-                else if (/supabase|db|database|storage/.test(q)) setFocus('supabase');
-                else if (/clear|resolve|review/.test(q)) clearAllFlags();
-                else if (/scan|sweep|check/.test(q)) runSecuritySweep();
-                else if (/alert|login|fail|attempt|who/.test(q)) {
-                    const f = hub.recent.filter(r => r.ok === false).slice(0, 5).map(r => r.app + ' ' + (r.username || r.action) + ' from ' + (r.ip || '?')).join('; ');
-                    setFocus('overview', '"' + (hub.openCount ? hub.openCount + ' open alert(s). ' : 'No open alerts. ') + (f ? 'Recent failures: ' + f + '.' : 'No recent failed requests.') + '"');
-                } else setFocus('overview');
-            }
+
+            /**
+             * Displays the admin login modal when unauthenticated.
+             */
             function showLogin() {
                 let o = document.getElementById('login-overlay');
                 if (!o) {
-                    o = document.createElement('div'); o.id = 'login-overlay';
+                    o = document.createElement('div');
+                    o.id = 'login-overlay';
                     o.className = 'fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4';
-                    o.innerHTML = '<form id="login-form" class="w-full max-w-xs p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3"><div class="text-sm uppercase tracking-widest text-sky-200">CAB Security</div><input id="login-user" name="username" value="admin" autocomplete="username" class="w-full bg-transparent border border-zinc-800 rounded-xl px-3 py-2 text-sm"><input id="login-pw" name="password" type="password" autocomplete="current-password" placeholder="Admin password" class="w-full bg-transparent border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-sky-400/50"><button class="w-full px-4 py-2.5 rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-200 text-sm">Sign in</button><p id="login-err" class="text-xs text-rose-300 min-h-[1rem]"></p></form>';
+                    o.innerHTML = '<form id="login-form" class="w-full max-w-xs p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3"><div class="text-sm uppercase tracking-widest text-sky-200">CAB Security</div><input id="login-user" name="username" value="admin" autocomplete="username" class="w-full bg-transparent border border-zinc-800 rounded-xl px-3 py-2 text-sm"><input id="login-pw" name="password" type="password" autocomplete="current-password" placeholder="Admin password" class="w-full bg-transparent border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-sky-400/50"><button class="w-full px-4 py-2.5 rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-200 text-sm">Sign in</button><p id="login-err" class="text-xs text-red-400 min-h-[1rem]"></p></form>';
                     document.body.appendChild(o);
                     document.getElementById('login-form').addEventListener('submit', async (e) => {
                         e.preventDefault();
                         const r = await api('login', { password: document.getElementById('login-pw').value });
-                        if (r.body.ok) { token = r.body.token; sessionStorage.setItem('sec_token', token); o.remove(); refresh(); }
-                        else document.getElementById('login-err').textContent = 'Wrong password';
+                        if (r.body.ok) {
+                            token = r.body.token;
+                            sessionStorage.setItem('sec_token', token);
+                            o.remove();
+                            refresh();
+                        } else {
+                            document.getElementById('login-err').textContent = 'Wrong password';
+                        }
                     });
                 }
             }
 
             /**
-             * Initializes 3D Fibonacci sphere lattice and directional traffic flow particles.
+             * Initializes 3D Fibonacci sphere lattice and ambient orbit particles.
              */
             function initVisualGeometry() {
                 orb.latticeNodes = [];
@@ -513,18 +997,42 @@
                     });
                 }
 
-                // Particles that orbit calmly in overview, or stream IN/OUT in traffic focus
                 orb.flowParticles = [];
-                for (let i = 0; i < 48; i++) {
+                for (let i = 0; i < 42; i++) {
                     orb.flowParticles.push({
                         angle: Math.random() * Math.PI * 2,
-                        dist: 1.05 + Math.random() * 0.85,
-                        speed: 0.004 + Math.random() * 0.008,
-                        dir: i % 2 === 0 ? -1 : 1, // -1 incoming, +1 outgoing
-                        size: 1.1 + Math.random() * 1.8,
-                        alpha: 0.25 + Math.random() * 0.6
+                        dist: 1.06 + Math.random() * 0.55,
+                        speed: 0.003 + Math.random() * 0.006,
+                        size: 1.1 + Math.random() * 1.6,
+                        alpha: 0.2 + Math.random() * 0.45
                     });
                 }
+            }
+
+            /**
+             * Computes the enlarged orb radius and frames live site nodes around it.
+             */
+            function updateOrbMetrics() {
+                if (!orb.width || !orb.height) return;
+                const minDim = Math.min(orb.width, orb.height);
+                const hasSites = orb.siteNodes.length > 0;
+
+                // Much larger centerpiece orb, slightly adjusted when live site nodes surround it
+                orb.baseRadius = hasSites
+                    ? Math.min(165, Math.max(96, minDim * 0.30))
+                    : Math.min(195, Math.max(115, minDim * 0.38));
+
+                // Position live site nodes cleanly around the outer perimeter
+                const padX = Math.min(76, orb.width * 0.14);
+                const padY = Math.min(54, orb.height * 0.12);
+                const rx = Math.max(orb.baseRadius + 58, (orb.width / 2) - padX);
+                const ry = Math.max(orb.baseRadius + 46, (orb.height / 2) - padY);
+
+                orb.siteNodes.forEach(site => {
+                    site.x = orb.cx + Math.cos(site.angle) * rx;
+                    site.y = orb.cy + Math.sin(site.angle) * ry;
+                    site.radius = 12 + site.volumeRatio * 6;
+                });
             }
 
             /**
@@ -541,11 +1049,23 @@
 
                 orb.cx = orb.width / 2;
                 orb.cy = orb.height / 2;
-                orb.baseRadius = Math.min(orb.width, orb.height) * 0.29;
+                updateOrbMetrics();
             }
 
             /**
-             * Draws an organic plasma wave layer.
+             * Checks if a pointer position hits a live site node.
+             */
+            function hitTestSite(x, y) {
+                for (let i = 0; i < orb.siteNodes.length; i++) {
+                    const s = orb.siteNodes[i];
+                    const dist = Math.hypot(x - s.x, y - s.y);
+                    if (dist <= s.radius + 16) return s;
+                }
+                return null;
+            }
+
+            /**
+             * Draws an organic plasma wave layer inside the central orb.
              */
             function drawPlasmaLayer(cx, cy, radius, phase, idx, hue) {
                 const pts = 64;
@@ -612,11 +1132,179 @@
             }
 
             /**
-             * Draws visual storytelling overlays directly around the orb:
-             * - Overview: 3 orbiting system satellites (colored by health)
-             * - Traffic: directional incoming/outgoing data streams
-             * - Brevo: warning arcs when suspicious emails are flagged
-             * - Supabase: clean circular storage quota gauge
+             * Draws live site nodes, dual-lane IN/OUT conduits, real packets, and arrival sparks.
+             */
+            function drawSiteTraffic(cx, cy, radius) {
+                const now = Date.now();
+                // Periodically prune connections older than 10 minutes
+                if (now - orb.lastPruneTime > 3000) {
+                    orb.lastPruneTime = now;
+                    if (orb.siteNodes.some(s => (now - s.lastTs) > LIVE_WINDOW_MS)) {
+                        rebuildSiteNodes();
+                        syncOrbVisualStory();
+                        renderStoryAndStrip();
+                    }
+                }
+
+                if (orb.siteNodes.length === 0) return;
+
+                // 1. Draw dual-lane conduits for each live site
+                orb.siteNodes.forEach(site => {
+                    const isSelected = orb.selectedSite === site.key;
+                    const isHovered = orb.hoveredSite === site.key;
+                    const dimmed = orb.selectedSite && !isSelected;
+                    const isFailed = site.liveFailed > 0;
+                    const laneAlpha = dimmed ? 0.12 : (isSelected || isHovered ? 0.55 : 0.28);
+
+                    const inGeo = getConduitGeometry(site, cx, cy, radius, 'in');
+                    const outGeo = getConduitGeometry(site, cx, cy, radius, 'out');
+
+                    // Incoming lane (Site -> Orb): solid line, red if failing
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(inGeo.x0, inGeo.y0);
+                    ctx.quadraticCurveTo(inGeo.cx, inGeo.cy, inGeo.x1, inGeo.y1);
+                    ctx.strokeStyle = isFailed
+                        ? `hsla(358, 92%, 58%, ${laneAlpha + 0.12})`
+                        : `hsla(${site.hue}, 90%, 64%, ${laneAlpha})`;
+                    ctx.lineWidth = isSelected || isHovered ? 2 : 1.25;
+                    ctx.stroke();
+
+                    // Outgoing lane (Orb -> Site): dashed response lane
+                    ctx.beginPath();
+                    ctx.setLineDash([4, 5]);
+                    ctx.moveTo(outGeo.x0, outGeo.y0);
+                    ctx.quadraticCurveTo(outGeo.cx, outGeo.cy, outGeo.x1, outGeo.y1);
+                    ctx.strokeStyle = `hsla(162, 85%, 56%, ${laneAlpha * 0.9})`;
+                    ctx.lineWidth = isSelected || isHovered ? 1.8 : 1.1;
+                    ctx.stroke();
+                    ctx.restore();
+                });
+
+                // 2. Update & draw real IN and OUT packets
+                for (let i = orb.sitePackets.length - 1; i >= 0; i--) {
+                    const pkt = orb.sitePackets[i];
+                    const site = orb.siteNodes.find(s => s.key === pkt.siteKey);
+                    if (!site) {
+                        orb.sitePackets.splice(i, 1);
+                        continue;
+                    }
+
+                    pkt.t += pkt.speed;
+                    const geo = getConduitGeometry(site, cx, cy, radius, pkt.dir);
+                    const pos = evalQuadBezier(geo, Math.min(1, pkt.t));
+                    const tailPos = evalQuadBezier(geo, Math.max(0, pkt.t - 0.12));
+
+                    const dimmed = orb.selectedSite && orb.selectedSite !== site.key;
+                    const alpha = dimmed ? 0.18 : 0.95;
+
+                    // Glowing trail
+                    ctx.save();
+                    const grad = ctx.createLinearGradient(tailPos.x, tailPos.y, pos.x, pos.y);
+                    grad.addColorStop(0, `hsla(${pkt.hue}, 100%, 65%, 0)`);
+                    grad.addColorStop(1, `hsla(${pkt.hue}, 100%, 70%, ${alpha})`);
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = pkt.size * 1.15;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(tailPos.x, tailPos.y);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+
+                    // Bright packet head
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, pkt.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${pkt.hue}, 100%, 84%, ${alpha})`;
+                    ctx.fill();
+                    ctx.restore();
+
+                    if (pkt.t >= 1) {
+                        spawnSpark(pos.x, pos.y, pkt.hue, pkt.failed);
+                        if (pkt.dir === 'in') {
+                            // Incoming request hit the orb -> emit matching OUT response packet
+                            spawnSitePacket(site, 'out', 0, false);
+                        } else {
+                            site.pulse = 1.0;
+                        }
+                        orb.sitePackets.splice(i, 1);
+                    }
+                }
+
+                // 3. Draw impact sparks
+                for (let i = orb.impactSparks.length - 1; i >= 0; i--) {
+                    const sp = orb.impactSparks[i];
+                    sp.radius += 0.9;
+                    sp.alpha *= 0.86;
+                    ctx.beginPath();
+                    ctx.arc(sp.x, sp.y, sp.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `hsla(${sp.hue}, 100%, 72%, ${sp.alpha})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    if (sp.alpha < 0.04 || sp.radius > sp.maxRadius) {
+                        orb.impactSparks.splice(i, 1);
+                    }
+                }
+
+                // 4. Draw live site orbs & labels
+                orb.siteNodes.forEach(site => {
+                    const isSelected = orb.selectedSite === site.key;
+                    const isHovered = orb.hoveredSite === site.key;
+                    const dimmed = orb.selectedSite && !isSelected;
+                    const isFailed = site.liveFailed > 0;
+                    const nodeHue = isFailed ? 358 : site.hue;
+                    const alpha = dimmed ? 0.3 : 1.0;
+
+                    site.pulse = Math.max(0, site.pulse * 0.94);
+
+                    // Outer glow halo
+                    const haloR = site.radius * (2.1 + site.pulse * 0.5);
+                    const halo = ctx.createRadialGradient(site.x, site.y, site.radius * 0.2, site.x, site.y, haloR);
+                    halo.addColorStop(0, `hsla(${nodeHue}, 100%, 58%, ${0.42 * alpha})`);
+                    halo.addColorStop(1, `hsla(${nodeHue}, 100%, 40%, 0)`);
+                    ctx.fillStyle = halo;
+                    ctx.beginPath();
+                    ctx.arc(site.x, site.y, haloR, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Small site orb body
+                    ctx.beginPath();
+                    ctx.arc(site.x, site.y, site.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${nodeHue}, 50%, 10%, ${0.92 * alpha})`;
+                    ctx.fill();
+                    ctx.lineWidth = isSelected || isHovered ? 2.2 : 1.5;
+                    ctx.strokeStyle = `hsla(${nodeHue}, 95%, ${isFailed ? 60 : 68}%, ${alpha})`;
+                    ctx.stroke();
+
+                    // Inner bright core dot
+                    ctx.beginPath();
+                    ctx.arc(site.x, site.y, site.radius * 0.34, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${nodeHue}, 100%, ${isFailed ? 64 : 78}%, ${alpha})`;
+                    ctx.fill();
+
+                    // Site name & live counter label
+                    ctx.save();
+                    ctx.font = '500 11px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    const labelY = site.y > cy ? site.y + site.radius + 15 : site.y - site.radius - 18;
+                    ctx.fillStyle = isFailed
+                        ? `rgba(254, 202, 202, ${alpha})`
+                        : `rgba(226, 232, 240, ${alpha})`;
+                    ctx.fillText(site.label, site.x, labelY);
+
+                    ctx.font = '400 10px ui-monospace, SFMono-Regular, Menlo, monospace';
+                    ctx.fillStyle = isFailed
+                        ? `rgba(248, 113, 113, ${alpha})`
+                        : `rgba(148, 163, 184, ${alpha})`;
+                    const sub = site.liveFailed > 0
+                        ? `${site.liveReq} req • ${site.liveFailed} fail`
+                        : `${site.liveReq} live`;
+                    ctx.fillText(sub, site.x, labelY + 12);
+                    ctx.restore();
+                });
+            }
+
+            /**
+             * Draws visual storytelling overlays directly around the orb.
              */
             function drawStoryVisuals(cx, cy, radius, hue) {
                 // 1. Scanning radar sweep
@@ -626,7 +1314,7 @@
                     ctx.translate(cx, cy);
                     ctx.rotate(orb.scanAngle);
                     ctx.beginPath();
-                    ctx.arc(0, 0, radius * 1.38, 0, 1.1);
+                    ctx.arc(0, 0, radius * 1.18, 0, 1.1);
                     ctx.strokeStyle = 'hsla(195, 100%, 76%, 0.75)';
                     ctx.lineWidth = 2.5;
                     ctx.lineCap = 'round';
@@ -637,7 +1325,7 @@
                 // 2. Supabase Quota Arc (when focused on Supabase)
                 if (orb.focus === 'supabase') {
                     const pct = Math.min(1, hub.supabase.storageGB / hub.supabase.quotaGB);
-                    const ringR = radius * 1.36;
+                    const ringR = radius * 1.16;
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
@@ -665,8 +1353,8 @@
                             const frac = s / 8;
                             const ang = startA + frac * 0.7;
                             const env = Math.sin(frac * Math.PI);
-                            const jitter = Math.sin(orb.time * 16 + s * 2.5 + a) * radius * 0.12 * env;
-                            const r = radius * (0.82 + env * 0.22) + jitter;
+                            const jitter = Math.sin(orb.time * 16 + s * 2.5 + a) * radius * 0.1 * env;
+                            const r = radius * (0.86 + env * 0.18) + jitter;
                             const x = cx + Math.cos(ang) * r;
                             const y = cy + Math.sin(ang) * r;
                             if (s === 0) ctx.moveTo(x, y);
@@ -678,60 +1366,21 @@
                     }
                 }
 
-                // 4. Overview Orbiting System Satellites
-                if (orb.focus === 'overview') {
-                    const orbitR = radius * 1.42;
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-
-                    orb.satellites.forEach((sat, idx) => {
-                        sat.angle += 0.0045;
-                        const sx = cx + Math.cos(sat.angle) * orbitR;
-                        const sy = cy + Math.sin(sat.angle) * orbitR;
-                        const isWarn = (sat.key === 'brevo' && hub.brevo.flagged > 0) ||
-                                       (sat.key === 'traffic' && hub.traffic.alert);
-                        const color = isWarn ? 'rgba(251, 191, 36, 0.95)' : 'rgba(56, 189, 248, 0.9)';
-
-                        // Subtle glow halo
-                        ctx.beginPath();
-                        ctx.arc(sx, sy, isWarn ? 7 : 5, 0, Math.PI * 2);
-                        ctx.fillStyle = isWarn ? 'rgba(251, 191, 36, 0.22)' : 'rgba(56, 189, 248, 0.18)';
-                        ctx.fill();
-
-                        // Satellite core dot
-                        ctx.beginPath();
-                        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-                        ctx.fillStyle = color;
-                        ctx.fill();
-                    });
-                }
-
-                // 5. Particles: Flowing IN/OUT during Traffic focus, calm orbit otherwise
+                // 4. Calm ambient orbit particles
                 orb.flowParticles.forEach(pt => {
-                    if (orb.focus === 'traffic') {
-                        const flowSpeed = (hub.traffic.alert ? 0.022 : 0.011);
-                        pt.dist += pt.dir * flowSpeed;
-                        if (pt.dist < 0.85) pt.dist = 1.9;
-                        if (pt.dist > 1.95) pt.dist = 0.88;
-                    } else {
-                        pt.angle += pt.speed * orb.speed;
-                    }
+                    pt.angle += pt.speed * orb.speed;
                     const px = cx + Math.cos(pt.angle) * (radius * pt.dist);
                     const py = cy + Math.sin(pt.angle) * (radius * pt.dist);
-                    const pHue = orb.focus === 'traffic' ? (pt.dir < 0 ? 195 : 175) : hue - 8;
-                    ctx.fillStyle = `hsla(${pHue}, 100%, 78%, ${pt.alpha})`;
+                    ctx.fillStyle = `hsla(${hue - 8}, 100%, 78%, ${pt.alpha})`;
                     ctx.beginPath();
                     ctx.arc(px, py, pt.size, 0, Math.PI * 2);
                     ctx.fill();
                 });
 
-                // 6. Hold-to-Scan progress ring
+                // 5. Hold-to-Scan progress ring
                 if (orb.holdLevel > 0.03) {
                     ctx.beginPath();
-                    ctx.arc(cx, cy, radius * 1.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * orb.holdLevel);
+                    ctx.arc(cx, cy, radius * 1.22, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * orb.holdLevel);
                     ctx.strokeStyle = 'hsla(198, 100%, 82%, 0.85)';
                     ctx.lineWidth = 2.5;
                     ctx.lineCap = 'round';
@@ -757,27 +1406,27 @@
 
                 orb.speed += (orb.targetSpeed + orb.holdLevel * 1.6 - orb.speed) * 0.06;
                 orb.turbulence += (orb.targetTurbulence + orb.holdLevel * 0.14 - orb.turbulence) * 0.06;
-                orb.scale += (orb.targetScale + orb.holdLevel * 0.08 - orb.scale) * 0.06;
+                orb.scale += (orb.targetScale + orb.holdLevel * 0.06 - orb.scale) * 0.06;
                 orb.time += 0.02 * orb.speed;
 
                 ctx.clearRect(0, 0, orb.width, orb.height);
 
-                const offsetX = orb.pointerActive ? (orb.pointerX - orb.cx) * 0.05 : 0;
-                const offsetY = orb.pointerActive ? (orb.pointerY - orb.cy) * 0.05 : 0;
+                const offsetX = orb.pointerActive ? (orb.pointerX - orb.cx) * 0.035 : 0;
+                const offsetY = orb.pointerActive ? (orb.pointerY - orb.cy) * 0.035 : 0;
                 const cx = orb.cx + offsetX;
                 const cy = orb.cy + offsetY;
-                const breathe = Math.sin(orb.time * 1.5) * 0.028;
+                const breathe = Math.sin(orb.time * 1.5) * 0.025;
                 const radius = orb.baseRadius * (orb.scale + breathe);
                 const hue = orb.hue;
 
                 // Outer ambient glow
-                const aura = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 2.15);
+                const aura = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 1.75);
                 aura.addColorStop(0, `hsla(${hue}, 100%, 58%, 0.34)`);
-                aura.addColorStop(0.5, `hsla(${hue + 10}, 95%, 42%, 0.12)`);
+                aura.addColorStop(0.55, `hsla(${hue + 10}, 95%, 42%, 0.12)`);
                 aura.addColorStop(1, 'hsla(210, 90%, 20%, 0)');
                 ctx.fillStyle = aura;
                 ctx.beginPath();
-                ctx.arc(cx, cy, radius * 2.15, 0, Math.PI * 2);
+                ctx.arc(cx, cy, radius * 1.75, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Expanding shockwave pulses
@@ -793,8 +1442,9 @@
                     if (p.alpha < 0.02 || p.radius > p.maxRadius) orb.pulses.splice(i, 1);
                 }
 
-                // Storytelling visuals (satellites, streams, quota ring, warning arcs)
+                // Storytelling visuals & live per-site traffic conduits
                 drawStoryVisuals(cx, cy, radius, hue);
+                drawSiteTraffic(cx, cy, radius);
 
                 // Plasma Core & 3D Lattice
                 ctx.save();
@@ -837,9 +1487,22 @@
                     orb.pointerX = e.clientX - rect.left;
                     orb.pointerY = e.clientY - rect.top;
                     orb.pointerActive = true;
+                    const hit = hitTestSite(orb.pointerX, orb.pointerY);
+                    orb.hoveredSite = hit ? hit.key : null;
                 });
 
-                stage.addEventListener('pointerdown', () => {
+                stage.addEventListener('pointerdown', (e) => {
+                    const rect = stage.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const hit = hitTestSite(x, y);
+                    if (hit) {
+                        orb.selectedSite = orb.selectedSite === hit.key ? null : hit.key;
+                        syncOrbVisualStory();
+                        renderStoryAndStrip();
+                        triggerPulse(0.85, hit.liveFailed > 0 ? 358 : hit.hue);
+                        return;
+                    }
                     orb.isHolding = true;
                     if (orbHint) orbHint.classList.add('opacity-0');
                 });
@@ -854,6 +1517,7 @@
                 stage.addEventListener('pointercancel', endHold);
                 stage.addEventListener('pointerleave', () => {
                     orb.pointerActive = false;
+                    orb.hoveredSite = null;
                     if (orb.isHolding) endHold();
                 });
 
@@ -865,8 +1529,8 @@
                     activityDrawer.classList.toggle('hidden');
                 });
 
-                simAlertBtn.addEventListener('click', simulateAlert);
                 clearFlagsBtn.addEventListener('click', clearAllFlags);
+                clearAllBtn.addEventListener('click', clearAllFlags);
 
                 soundBtn.addEventListener('click', () => {
                     orb.soundEnabled = !orb.soundEnabled;
@@ -879,14 +1543,6 @@
                         showToast('Audio Muted');
                     }
                 });
-
-                commandForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const text = commandInput.value.trim();
-                    if (!text) return;
-                    commandInput.value = '';
-                    handleQuery(text);
-                });
             }
 
             window.onload = function () {
@@ -898,7 +1554,8 @@
                 bindEvents();
                 render();
                 if (token) refresh(); else showLogin();
-                setInterval(() => { if (token && !document.hidden) refresh(); }, 300000);
+                // Poll every 10 seconds while tab is active for live connections
+                setInterval(() => { if (token && !document.hidden) refresh(); }, 10000);
             };
         })();
     </script>
