@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAB Security</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-black text-slate-100 font-sans antialiased overflow-x-hidden min-h-screen flex flex-col justify-between selection:bg-sky-500/30 selection:text-sky-200">
+
+    <!-- Minimal Top Header -->
+    <header class="relative z-20 w-full max-w-4xl mx-auto px-5 pt-6 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span id="global-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)] animate-pulse"></span>
+            <div>
+                <h1 class="text-sm font-semibold tracking-[0.16em] uppercase text-sky-100">CAB Security</h1>
+                <p id="global-status" class="text-xs text-slate-400">AI Security Agent • 1 Brevo Flag Active</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Toggle Activity Log Drawer -->
+            <button id="btn-log-toggle" type="button"
+                class="px-3 py-2 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-slate-300 hover:text-sky-200 text-xs font-medium transition-all flex items-center gap-1.5 active:scale-95">
+                <span>Activity</span>
+                <span id="log-count" class="px-1.5 py-0.5 rounded-md bg-sky-500/15 text-sky-300 font-mono text-[10px]">3</span>
+            </button>
+
+            <!-- Minimal Audio Toggle -->
+            <button id="btn-sound" type="button" aria-label="Toggle Audio"
+                class="p-2 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-slate-400 hover:text-sky-300 transition-all active:scale-95">
+                <svg id="icon-sound-off" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+                <svg id="icon-sound-on" class="w-4 h-4 hidden text-sky-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Subtle Non-Blocking Toast -->
+    <div id="toast-box" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
+        <div class="px-4 py-1.5 rounded-full bg-zinc-950/95 border border-sky-400/35 text-sky-100 text-xs font-medium shadow-[0_0_24px_rgba(14,165,233,0.25)] backdrop-blur-md">
+            <span id="toast-message">Scan Complete</span>
+        </div>
+    </div>
+
+    <!-- Centerpiece: Storytelling Interactive Orb -->
+    <main class="relative flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto px-4 py-2">
+        <!-- Responsive Orb Canvas -->
+        <div id="orb-stage" class="relative w-full h-[46vh] min-h-[300px] max-h-[480px] flex items-center justify-center cursor-pointer select-none touch-none">
+            <canvas id="orb-canvas" class="w-full h-full block"></canvas>
+
+            <!-- Subtle Bottom Hint (fades after interaction) -->
+            <div id="orb-hint" class="pointer-events-none absolute bottom-1 px-3 py-1 rounded-full bg-black/70 border border-zinc-800/80 text-[11px] text-slate-400 backdrop-blur-sm transition-opacity duration-500">
+                Tap orb to sweep • Real data only
+            </div>
+        </div>
+
+        <!-- AI Agent Narrative Line (Tells the current visual story) -->
+        <div class="w-full max-w-xl text-center mt-1 mb-5 px-2">
+            <p id="story-headline" class="text-sm sm:text-base text-sky-100/95 font-light leading-relaxed min-h-[2.5rem] transition-opacity duration-300">
+                "Monitoring all systems. Traffic and Supabase are healthy, while 1 suspicious outbound email is flagged in Brevo."
+            </p>
+        </div>
+
+        <!-- 4 Clean Focus Pills (Overview, Traffic, Brevo, Supabase) -->
+        <nav aria-label="System Focus" class="w-full max-w-xl grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            <button type="button" data-focus="overview"
+                class="focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-sky-500/15 border-sky-400/40 text-sky-100">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase tracking-wider font-medium text-sky-300">Overview</span>
+                    <span id="dot-overview" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                </div>
+                <div id="pill-overview" class="text-xs font-mono text-slate-200 mt-1">3 Systems</div>
+            </button>
+
+            <button type="button" data-focus="traffic"
+                class="focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-zinc-950/90 border-zinc-800/90 text-slate-300 hover:border-zinc-700">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase tracking-wider font-medium text-slate-400">Traffic</span>
+                    <span id="dot-traffic" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                </div>
+                <div id="pill-traffic" class="text-xs font-mono text-slate-200 mt-1">1.8 / 0.9 MB/s</div>
+            </button>
+
+            <button type="button" data-focus="brevo"
+                class="focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-zinc-950/90 border-amber-500/35 text-slate-300 hover:border-amber-400/60">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase tracking-wider font-medium text-amber-300">Brevo</span>
+                    <span id="dot-brevo" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                </div>
+                <div id="pill-brevo" class="text-xs font-mono text-amber-200 mt-1">1 Flagged</div>
+            </button>
+
+            <button type="button" data-focus="supabase"
+                class="focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-zinc-950/90 border-zinc-800/90 text-slate-300 hover:border-zinc-700">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase tracking-wider font-medium text-slate-400">Supabase</span>
+                    <span id="dot-supabase" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                </div>
+                <div id="pill-supabase" class="text-xs font-mono text-slate-200 mt-1">38% Quota</div>
+            </button>
+        </nav>
+
+        <!-- Single Context-Aware Detail Strip (Only shows what you're focused on) -->
+        <section id="detail-strip" class="w-full max-w-xl p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 backdrop-blur-xl transition-all">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div id="detail-metrics" class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-mono">
+                    <!-- Dynamically populated based on active focus -->
+                </div>
+                <div id="detail-actions" class="flex items-center gap-2">
+                    <!-- Dynamically populated quick action -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Expandable Minimal Activity Log (Hidden by default for clean canvas) -->
+        <aside id="activity-drawer" class="hidden w-full max-w-xl mt-3 p-4 rounded-2xl bg-zinc-950/95 border border-zinc-800 backdrop-blur-xl">
+            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-zinc-800/80">
+                <span class="text-xs font-medium uppercase tracking-wider text-sky-200">Alerts and live requests</span>
+                <div class="flex items-center gap-2">
+                    <button id="btn-sim-alert" type="button" class="hidden px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] transition-all active:scale-95">Simulate Alert</button>
+                    <button id="btn-clear-flags" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] transition-all active:scale-95">Clear Flags</button>
+                </div>
+            </div>
+            <div id="log-list" class="max-h-36 overflow-y-auto space-y-2 font-mono text-[11px] pr-1">
+                <!-- Populated dynamically -->
+            </div>
+        </aside>
+    </main>
+
+    <!-- Minimal Bottom AI Command Bar -->
+    <footer class="relative z-20 w-full max-w-xl mx-auto px-4 pb-6 pt-2">
+        <form id="command-form" class="flex items-center gap-2 p-1.5 rounded-2xl bg-zinc-950/90 border border-zinc-800 focus-within:border-sky-400/50 focus-within:shadow-[0_0_24px_rgba(56,189,248,0.16)] transition-all backdrop-blur-xl">
+            <input id="command-input" type="text" autocomplete="off"
+                placeholder="Ask (e.g. 'alerts', 'failed logins', 'brevo', 'traffic', 'sweep')..."
+                class="flex-1 bg-transparent px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none">
+            <button type="submit"
+                class="px-4 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 text-xs font-medium transition-all active:scale-95">
+                Ask
+            </button>
+        </form>
+    </footer>
+
+    <!-- Interactive Storytelling Orb & Security Hub Logic -->
+    <script>
+        (function () {
+            'use strict';
+
+            // DOM Elements
+            const canvas = document.getElementById('orb-canvas');
+            const ctx = canvas.getContext('2d');
+            const stage = document.getElementById('orb-stage');
+            const globalDot = document.getElementById('global-dot');
+            const globalStatus = document.getElementById('global-status');
+            const storyHeadline = document.getElementById('story-headline');
+            const orbHint = document.getElementById('orb-hint');
+            const focusButtons = document.querySelectorAll('.focus-btn');
+            const detailMetrics = document.getElementById('detail-metrics');
+            const detailActions = document.getElementById('detail-actions');
+            const activityDrawer = document.getElementById('activity-drawer');
+            const logToggleBtn = document.getElementById('btn-log-toggle');
+            const logCountEl = document.getElementById('log-count');
+            const logListEl = document.getElementById('log-list');
+            const simAlertBtn = document.getElementById('btn-sim-alert');
+            const clearFlagsBtn = document.getElementById('btn-clear-flags');
+            const soundBtn = document.getElementById('btn-sound');
+            const iconSoundOff = document.getElementById('icon-sound-off');
+            const iconSoundOn = document.getElementById('icon-sound-on');
+            const commandForm = document.getElementById('command-form');
+            const commandInput = document.getElementById('command-input');
+            const toastBox = document.getElementById('toast-box');
+            const toastMessage = document.getElementById('toast-message');
+
+            // Pill status elements
+            const pillOverview = document.getElementById('pill-overview');
+            const pillTraffic = document.getElementById('pill-traffic');
+            const pillBrevo = document.getElementById('pill-brevo');
+            const pillSupabase = document.getElementById('pill-supabase');
+            const dotOverview = document.getElementById('dot-overview');
+            const dotTraffic = document.getElementById('dot-traffic');
+            const dotBrevo = document.getElementById('dot-brevo');
+            const dotSupabase = document.getElementById('dot-supabase');
+
+            // Visual & Animation State
+            const orb = {
+                width: 0,
+                height: 0,
+                cx: 0,
+                cy: 0,
+                baseRadius: 110,
+                time: 0,
+                frame: 0,
+                // Story focus: 'overview' | 'traffic' | 'brevo' | 'supabase'
+                focus: 'overview',
+                isScanning: false,
+                scanAngle: 0,
+                // Smoothly interpolated visual traits
+                hue: 205,
+                targetHue: 205,
+                speed: 0.9,
+                targetSpeed: 0.9,
+                turbulence: 0.12,
+                targetTurbulence: 0.12,
+                scale: 1.0,
+                targetScale: 1.0,
+                // Pointer magnetism & hold-to-scan
+                pointerX: 0,
+                pointerY: 0,
+                pointerActive: false,
+                isHolding: false,
+                holdLevel: 0,
+                // Visual collections
+                pulses: [],
+                latticeNodes: [],
+                flowParticles: [],
+                satellites: [
+                    { key: 'traffic', angle: -Math.PI * 0.75, label: 'TRAFFIC' },
+                    { key: 'brevo', angle: -Math.PI * 0.25, label: 'BREVO' },
+                    { key: 'supabase', angle: Math.PI * 0.5, label: 'SUPABASE' }
+                ],
+                // Audio & Timers
+                soundEnabled: false,
+                audioCtx: null,
+                toastTimer: null,
+                scanTimer: null
+            };
+
+            // System Monitoring State (Ready to connect to live APIs/Webhooks)
+            const GW = 'https://csutspaxezmjbqynpprt.supabase.co/functions/v1/security-gateway';
+            const hub = {
+                traffic: { rpm: 0, req24: 0, failed24: 0, denied24: 0, alert: false, inMBs: 0, outMBs: 0, reqPerSec: 0, blocked: 0 },
+                brevo: { sent: 0, recipients: 0, flagged: 0, frozen: false },
+                supabase: { storageGB: 0, quotaGB: 0.5, dbMB: 0, latencyMs: 0, connections: 0, maxConnections: 0 },
+                alerts: [], recent: [], ai: false, loaded: false, err: ''
+            };
+            /**
+             * Non-blocking toast notification.
+             */
+            function showToast(msg) {
+                toastMessage.textContent = msg;
+                toastBox.classList.remove('opacity-0');
+                clearTimeout(orb.toastTimer);
+                orb.toastTimer = setTimeout(() => {
+                    toastBox.classList.add('opacity-0');
+                }, 2200);
+            }
+
+            /**
+             * Gentle Web Audio chime for tactile feedback when audio is enabled.
+             */
+            function playTone(freq = 440, duration = 0.22, type = 'sine') {
+                if (!orb.soundEnabled) return;
+                try {
+                    if (!orb.audioCtx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        orb.audioCtx = new AudioCtx();
+                    }
+                    if (orb.audioCtx.state === 'suspended') orb.audioCtx.resume();
+                    const osc = orb.audioCtx.createOscillator();
+                    const gain = orb.audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, orb.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 1.18, orb.audioCtx.currentTime + duration);
+                    gain.gain.setValueAtTime(0.06, orb.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, orb.audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(orb.audioCtx.destination);
+                    osc.start();
+                    osc.stop(orb.audioCtx.currentTime + duration);
+                } catch (err) {
+                    console.warn('Audio unavailable:', err);
+                }
+            }
+
+            /**
+             * Appends an event to the AI Security log.
+             */
+            function addLog(source, severity, message) {
+                const time = new Date().toTimeString().split(' ')[0];
+                hub.logs.unshift({ time, source, severity, message });
+                if (hub.logs.length > 25) hub.logs.pop();
+                renderLogList();
+            }
+
+            /**
+             * Emits an energy ripple from the orb.
+             */
+            function triggerPulse(strength = 1.0, customHue = null) {
+                orb.pulses.push({
+                    radius: orb.baseRadius * 0.85,
+                    maxRadius: orb.baseRadius * (2.2 + strength * 0.5),
+                    alpha: Math.min(0.95, 0.75 * strength),
+                    hue: customHue
+                });
+                playTone(280 + strength * 50, 0.28, 'triangle');
+                if (orbHint) orbHint.classList.add('opacity-0');
+            }
+
+            /**
+             * Updates the orb's visual storytelling parameters based on current focus & alerts.
+             */
+            function syncOrbVisualStory() {
+                const hasAlert = hub.brevo.flagged > 0 || hub.traffic.alert;
+
+                if (orb.isScanning) {
+                    orb.targetHue = 200;
+                    orb.targetSpeed = 2.4;
+                    orb.targetTurbulence = 0.28;
+                    orb.targetScale = 0.96;
+                    return;
+                }
+
+                if (orb.focus === 'traffic') {
+                    orb.targetHue = hub.traffic.alert ? 355 : 192;
+                    orb.targetSpeed = hub.traffic.alert ? 2.1 : 1.35;
+                    orb.targetTurbulence = hub.traffic.alert ? 0.26 : 0.16;
+                    orb.targetScale = 1.02;
+                } else if (orb.focus === 'brevo') {
+                    orb.targetHue = hub.brevo.flagged > 0 ? 38 : 205;
+                    orb.targetSpeed = hub.brevo.flagged > 0 ? 1.6 : 0.9;
+                    orb.targetTurbulence = hub.brevo.flagged > 0 ? 0.24 : 0.11;
+                    orb.targetScale = hub.brevo.flagged > 0 ? 1.05 : 1.0;
+                } else if (orb.focus === 'supabase') {
+                    orb.targetHue = 178;
+                    orb.targetSpeed = 0.85;
+                    orb.targetTurbulence = 0.10;
+                    orb.targetScale = 0.98;
+                } else {
+                    // Overview: Luminous Blue (with subtle warning tempo if an alert exists)
+                    orb.targetHue = 205;
+                    orb.targetSpeed = hasAlert ? 1.15 : 0.85;
+                    orb.targetTurbulence = hasAlert ? 0.16 : 0.11;
+                    orb.targetScale = 1.0;
+                }
+            }
+
+            /**
+             * Switches the active focus view and updates the narrative & detail strip.
+             */
+            function setFocus(newFocus, customNarrative = null) {
+                orb.focus = newFocus;
+                syncOrbVisualStory();
+
+                // Update pill styling
+                focusButtons.forEach(btn => {
+                    const isSelected = btn.dataset.focus === newFocus;
+                    const isBrevoAlert = btn.dataset.focus === 'brevo' && hub.brevo.flagged > 0;
+                    const isTrafficAlert = btn.dataset.focus === 'traffic' && hub.traffic.alert;
+
+                    if (isSelected) {
+                        if (isBrevoAlert) {
+                            btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-amber-500/15 border-amber-400/50 text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.12)]';
+                        } else if (isTrafficAlert) {
+                            btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-rose-500/15 border-rose-400/50 text-rose-100';
+                        } else {
+                            btn.className = 'focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-sky-500/15 border-sky-400/45 text-sky-100 shadow-[0_0_20px_rgba(56,189,248,0.14)]';
+                        }
+                    } else {
+                        const alertBorder = isBrevoAlert ? 'border-amber-500/30' : isTrafficAlert ? 'border-rose-500/35' : 'border-zinc-800/90';
+                        btn.className = `focus-btn p-3 rounded-2xl border transition-all text-left active:scale-95 bg-zinc-950/90 ${alertBorder} text-slate-300 hover:border-zinc-700`;
+                    }
+                });
+
+                renderStoryAndStrip(customNarrative);
+                triggerPulse(0.9);
+            }
+
+            const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+            let token = sessionStorage.getItem('sec_token') || '';
+            async function api(action, extra) {
+                const r = await fetch(GW, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify({ action, ...(extra || {}) }) });
+                const j = await r.json().catch(() => ({}));
+                if (r.status === 401 && action !== 'login') { token = ''; sessionStorage.removeItem('sec_token'); showLogin(); throw new Error('auth'); }
+                return { status: r.status, body: j };
+            }
+            function applyData(d) {
+                if (!d || d.error) { hub.err = (d && d.error) || 'no data'; return; }
+                hub.loaded = true; hub.err = '';
+                hub.traffic.rpm = d.rpm10; hub.traffic.req24 = d.req24; hub.traffic.failed24 = d.failed24; hub.traffic.denied24 = d.denied24;
+                hub.traffic.alert = (d.alerts || []).some(a => a.status === 'open' && a.rule !== 'failed_login' && (a.severity === 'high' || a.severity === 'critical') && !/email|sender/.test(a.rule));
+                hub.brevo.sent = d.emails24; hub.brevo.recipients = d.recipients24; hub.brevo.flagged = d.email_flags; hub.brevo.frozen = d.email_frozen;
+                hub.supabase.dbMB = d.db_mb; hub.supabase.storageGB = d.db_mb / 1024;
+                hub.alerts = d.alerts || []; hub.recent = d.recent || []; hub.ai = d.ai_armed; hub.by_app = d.by_app || {};
+                hub.openCount = hub.alerts.filter(a => a.status === 'open').length;
+                hub.logs = hub.recent.map(r => ({ time: new Date(r.ts).toLocaleTimeString([], {hour12:false}), source: String(r.app).toUpperCase(), severity: r.ok === false ? 'WARN' : 'INFO', message: esc(r.action || 'request') + ' ' + esc(r.status) + (r.username ? ' user ' + esc(r.username) : '') + (r.subject ? ' "' + esc(r.subject) + '"' : '') + (r.ip ? ' from ' + esc(r.ip) : '') }));
+            }
+            async function refresh(label) {
+                try { const r = await api('summary'); applyData(r.body); } catch (e) { return; }
+                syncOrbVisualStory(); renderStoryAndStrip(); renderLogList();
+                if (label) showToast(label);
+            }
+            function renderStoryAndStrip(customNarrative = null) {
+                const { traffic, brevo, supabase } = hub;
+                const open = hub.openCount || 0;
+                const dot = (c) => 'w-1.5 h-1.5 rounded-full ' + c;
+                if (!hub.loaded) { globalStatus.textContent = hub.err ? 'Security Monitor • ' + hub.err : 'Security Monitor • loading real data...'; storyHeadline.textContent = customNarrative || '"Reading the live request log..."'; return; }
+                globalDot.className = 'w-2.5 h-2.5 rounded-full ' + (open ? 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)]' : 'bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]') + ' animate-pulse';
+                globalStatus.textContent = open ? ('Security Monitor • ' + open + ' open alert' + (open > 1 ? 's' : '')) : 'Security Monitor • No open alerts';
+                pillOverview.textContent = open ? open + ' Open' : 'All Quiet';
+                dotOverview.className = dot(open ? 'bg-amber-400 animate-ping' : 'bg-emerald-400');
+                pillTraffic.textContent = traffic.req24 + ' req / 24h';
+                dotTraffic.className = dot(traffic.alert ? 'bg-rose-400 animate-ping' : 'bg-emerald-400');
+                pillBrevo.textContent = brevo.sent + ' sent' + (brevo.flagged ? ', ' + brevo.flagged + ' flagged' : '');
+                pillBrevo.className = 'text-xs font-mono mt-1 ' + (brevo.flagged ? 'text-amber-200' : 'text-emerald-300');
+                dotBrevo.className = dot(brevo.flagged ? 'bg-amber-400 animate-ping' : 'bg-emerald-400');
+                pillSupabase.textContent = supabase.dbMB + ' MB DB';
+                dotSupabase.className = dot('bg-emerald-400');
+                const m = (k, v, c) => '<div><span class="text-slate-500">' + k + '</span> <span class="' + (c || 'text-sky-200') + ' ml-1">' + v + '</span></div>';
+                const btn = (id, t) => '<button id="' + id + '" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-200 text-xs transition-all">' + t + '</button>';
+                const topAlert = hub.alerts.find(a => a.status === 'open');
+                if (orb.focus === 'traffic') {
+                    storyHeadline.textContent = customNarrative || ('"' + traffic.req24 + ' real requests in the last 24h across all apps, ' + traffic.failed24 + ' failed, ' + traffic.denied24 + ' denied. Last 10 minutes: ' + traffic.rpm + ' requests per minute."');
+                    detailMetrics.innerHTML = m('24H', traffic.req24) + m('FAILED', traffic.failed24, traffic.failed24 ? 'text-amber-300' : 'text-emerald-300') + m('DENIED', traffic.denied24, traffic.denied24 ? 'text-amber-300' : 'text-emerald-300') + m('PER MIN', traffic.rpm);
+                    detailActions.innerHTML = btn('ctx-scan', 'Run Sweep');
+                } else if (orb.focus === 'brevo') {
+                    storyHeadline.textContent = customNarrative || ('"' + brevo.sent + ' app emails (' + brevo.recipients + ' recipients) sent through the gateways in 24h. ' + (brevo.flagged ? brevo.flagged + ' flagged.' : 'None flagged.') + (brevo.frozen ? ' App email is FROZEN.' : '') + ' Counts come from the gateway send log, not the Brevo dashboard."');
+                    detailMetrics.innerHTML = m('SENT 24H', brevo.sent) + m('RECIPIENTS', brevo.recipients) + m('FLAGS', brevo.flagged, brevo.flagged ? 'text-amber-300' : 'text-emerald-300') + m('EMAIL', brevo.frozen ? 'FROZEN' : 'live', brevo.frozen ? 'text-rose-300' : 'text-emerald-300');
+                    detailActions.innerHTML = btn('ctx-scan', 'Run Sweep');
+                } else if (orb.focus === 'supabase') {
+                    storyHeadline.textContent = customNarrative || ('"The database is ' + supabase.dbMB + ' MB. The ring shows it against 500 MB, which assumes the free plan (not verified)."');
+                    detailMetrics.innerHTML = m('DB SIZE', supabase.dbMB + ' MB') + m('AI WATCH', hub.ai ? 'armed' : 'off', hub.ai ? 'text-emerald-300' : 'text-amber-300');
+                    detailActions.innerHTML = btn('ctx-scan', 'Refresh');
+                } else {
+                    const per = Object.entries(hub.by_app || {}).map(([k, v]) => k + ' ' + v.req + (v.failed ? ' (' + v.failed + ' failed)' : '')).join(', ');
+                    storyHeadline.textContent = customNarrative || (open ? ('"' + open + ' open alert' + (open > 1 ? 's' : '') + '. Latest: ' + esc(topAlert.summary) + '"') : ('"All quiet. ' + traffic.req24 + ' requests in 24h (' + (per || 'none yet') + '). Rules run every 5 minutes, and the AI pass reads batches of 20+ new events."'));
+                    detailMetrics.innerHTML = m('REQUESTS 24H', traffic.req24) + m('OPEN ALERTS', open, open ? 'text-amber-300' : 'text-emerald-300') + m('AI', hub.ai ? 'armed' : 'off', hub.ai ? 'text-emerald-300' : 'text-amber-300');
+                    detailActions.innerHTML = open ? btn('ctx-clear', 'Mark All Reviewed') : btn('ctx-scan', 'Security Sweep');
+                }
+                const bs = document.getElementById('ctx-scan'), bc = document.getElementById('ctx-clear');
+                if (bs) bs.onclick = runSecuritySweep;
+                if (bc) bc.onclick = clearAllFlags;
+            }
+            function renderLogList() {
+                const al = hub.alerts.slice(0, 8).map(a => '<div class="flex items-start gap-2 text-slate-300"><span class="text-slate-600 shrink-0">' + new Date(a.ts).toLocaleString([], {hour12:false}) + '</span><span class="' + (a.severity === 'critical' || a.severity === 'high' ? 'text-rose-300' : 'text-amber-300') + ' shrink-0 font-semibold">ALERT ' + esc(a.app).toUpperCase() + (a.status === 'reviewed' ? ' (reviewed)' : '') + '</span><span class="leading-snug">' + esc(a.summary) + '</span></div>').join('');
+                const ev = hub.logs.map(i => '<div class="flex items-start gap-2 text-slate-300"><span class="text-slate-600 shrink-0">' + i.time + '</span><span class="' + (i.severity === 'WARN' ? 'text-rose-300' : 'text-sky-300') + ' shrink-0 font-semibold">' + i.source + '</span><span class="leading-snug">' + i.message + '</span></div>').join('');
+                logCountEl.textContent = hub.openCount || 0;
+                logListEl.innerHTML = (al || ev) ? al + ev : '<div class="text-slate-500">No events yet.</div>';
+            }
+            async function runSecuritySweep() {
+                if (orb.isScanning) return;
+                orb.isScanning = true; syncOrbVisualStory(); triggerPulse(1.3, 198);
+                storyHeadline.textContent = '"Running the detection rules on the live log..."';
+                try { const r = await api('sweep'); applyData(r.body); } catch (e) {}
+                orb.isScanning = false; syncOrbVisualStory(); renderStoryAndStrip(); renderLogList(); triggerPulse(1.1); showToast('Sweep complete');
+            }
+            async function clearAllFlags() {
+                for (const a of hub.alerts.filter(x => x.status === 'open')) { try { const r = await api('ack', { id: a.id }); applyData(r.body); } catch (e) { break; } }
+                syncOrbVisualStory(); renderStoryAndStrip(); renderLogList(); showToast('Alerts marked reviewed');
+            }
+            function simulateAlert() { showToast('Real data only'); }
+            function handleQuery(raw) {
+                const q = raw.toLowerCase();
+                if (/brevo|mail|email/.test(q)) setFocus('brevo');
+                else if (/traffic|request|web/.test(q)) setFocus('traffic');
+                else if (/supabase|db|database|storage/.test(q)) setFocus('supabase');
+                else if (/clear|resolve|review/.test(q)) clearAllFlags();
+                else if (/scan|sweep|check/.test(q)) runSecuritySweep();
+                else if (/alert|login|fail|attempt|who/.test(q)) {
+                    const f = hub.recent.filter(r => r.ok === false).slice(0, 5).map(r => r.app + ' ' + (r.username || r.action) + ' from ' + (r.ip || '?')).join('; ');
+                    setFocus('overview', '"' + (hub.openCount ? hub.openCount + ' open alert(s). ' : 'No open alerts. ') + (f ? 'Recent failures: ' + f + '.' : 'No recent failed requests.') + '"');
+                } else setFocus('overview');
+            }
+            function showLogin() {
+                let o = document.getElementById('login-overlay');
+                if (!o) {
+                    o = document.createElement('div'); o.id = 'login-overlay';
+                    o.className = 'fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4';
+                    o.innerHTML = '<form id="login-form" class="w-full max-w-xs p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3"><div class="text-sm uppercase tracking-widest text-sky-200">CAB Security</div><input id="login-user" name="username" value="admin" autocomplete="username" class="w-full bg-transparent border border-zinc-800 rounded-xl px-3 py-2 text-sm"><input id="login-pw" name="password" type="password" autocomplete="current-password" placeholder="Admin password" class="w-full bg-transparent border border-zinc-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-sky-400/50"><button class="w-full px-4 py-2.5 rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-200 text-sm">Sign in</button><p id="login-err" class="text-xs text-rose-300 min-h-[1rem]"></p></form>';
+                    document.body.appendChild(o);
+                    document.getElementById('login-form').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const r = await api('login', { password: document.getElementById('login-pw').value });
+                        if (r.body.ok) { token = r.body.token; sessionStorage.setItem('sec_token', token); o.remove(); refresh(); }
+                        else document.getElementById('login-err').textContent = 'Wrong password';
+                    });
+                }
+            }
+
+            /**
+             * Initializes 3D Fibonacci sphere lattice and directional traffic flow particles.
+             */
+            function initVisualGeometry() {
+                orb.latticeNodes = [];
+                const count = 46;
+                const golden = (1 + Math.sqrt(5)) / 2;
+                for (let i = 0; i < count; i++) {
+                    const theta = (2 * Math.PI * i) / golden;
+                    const phi = Math.acos(1 - (2 * (i + 0.5)) / count);
+                    orb.latticeNodes.push({
+                        x: Math.sin(phi) * Math.cos(theta),
+                        y: Math.cos(phi),
+                        z: Math.sin(phi) * Math.sin(theta)
+                    });
+                }
+
+                // Particles that orbit calmly in overview, or stream IN/OUT in traffic focus
+                orb.flowParticles = [];
+                for (let i = 0; i < 48; i++) {
+                    orb.flowParticles.push({
+                        angle: Math.random() * Math.PI * 2,
+                        dist: 1.05 + Math.random() * 0.85,
+                        speed: 0.004 + Math.random() * 0.008,
+                        dir: i % 2 === 0 ? -1 : 1, // -1 incoming, +1 outgoing
+                        size: 1.1 + Math.random() * 1.8,
+                        alpha: 0.25 + Math.random() * 0.6
+                    });
+                }
+            }
+
+            /**
+             * Responsive canvas sizing with crisp DPR.
+             */
+            function resizeCanvas() {
+                const rect = stage.getBoundingClientRect();
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                orb.width = rect.width;
+                orb.height = rect.height;
+                canvas.width = Math.floor(rect.width * dpr);
+                canvas.height = Math.floor(rect.height * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                orb.cx = orb.width / 2;
+                orb.cy = orb.height / 2;
+                orb.baseRadius = Math.min(orb.width, orb.height) * 0.29;
+            }
+
+            /**
+             * Draws an organic plasma wave layer.
+             */
+            function drawPlasmaLayer(cx, cy, radius, phase, idx, hue) {
+                const pts = 64;
+                ctx.beginPath();
+                for (let i = 0; i <= pts; i++) {
+                    const a = (i / pts) * Math.PI * 2;
+                    const w1 = Math.sin(a * 3 + orb.time * 1.3 + phase) * orb.turbulence;
+                    const w2 = Math.cos(a * 5 - orb.time * 1.7 + idx) * (orb.turbulence * 0.5);
+                    const r = radius * (1 + w1 + w2);
+                    const x = cx + Math.cos(a) * r;
+                    const y = cy + Math.sin(a) * r;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+
+                const grad = ctx.createRadialGradient(cx - radius * 0.18, cy - radius * 0.18, radius * 0.05, cx, cy, radius * 1.2);
+                grad.addColorStop(0, `hsla(${hue - 10}, 100%, ${64 + idx * 10}%, 0.48)`);
+                grad.addColorStop(0.6, `hsla(${hue}, 95%, 50%, 0.24)`);
+                grad.addColorStop(1, `hsla(${hue + 14}, 90%, 30%, 0)`);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+
+            /**
+             * Draws the 3D rotating holographic lattice inside the orb.
+             */
+            function drawLattice(cx, cy, radius, hue) {
+                const rotY = orb.time * 0.42;
+                const rotX = Math.sin(orb.time * 0.28) * 0.35 + (orb.pointerActive ? (orb.pointerY - orb.cy) * 0.0014 : 0);
+                const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+                const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+                const sphereR = radius * 0.85;
+                const proj = [];
+
+                for (let i = 0; i < orb.latticeNodes.length; i++) {
+                    const n = orb.latticeNodes[i];
+                    const x1 = n.x * cosY - n.z * sinY;
+                    const z1 = n.z * cosY + n.x * sinY;
+                    const y2 = n.y * cosX - z1 * sinX;
+                    const z2 = z1 * cosX + n.y * sinX;
+                    proj.push({ x: cx + x1 * sphereR, y: cy + y2 * sphereR, z: z2, depth: (z2 + 1.8) / 2.8 });
+                }
+
+                const maxD2 = (sphereR * 0.56) * (sphereR * 0.56);
+                ctx.lineWidth = 0.8;
+                for (let i = 0; i < proj.length; i++) {
+                    if (proj[i].z < -0.2) continue;
+                    for (let j = i + 1; j < proj.length; j++) {
+                        if (proj[j].z < -0.2) continue;
+                        const dx = proj[i].x - proj[j].x;
+                        const dy = proj[i].y - proj[j].y;
+                        const d2 = dx * dx + dy * dy;
+                        if (d2 < maxD2) {
+                            const alpha = (1 - d2 / maxD2) * 0.3 * proj[i].depth;
+                            ctx.strokeStyle = `hsla(${hue - 10}, 100%, 78%, ${alpha})`;
+                            ctx.beginPath();
+                            ctx.moveTo(proj[i].x, proj[i].y);
+                            ctx.lineTo(proj[j].x, proj[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Draws visual storytelling overlays directly around the orb:
+             * - Overview: 3 orbiting system satellites (colored by health)
+             * - Traffic: directional incoming/outgoing data streams
+             * - Brevo: warning arcs when suspicious emails are flagged
+             * - Supabase: clean circular storage quota gauge
+             */
+            function drawStoryVisuals(cx, cy, radius, hue) {
+                // 1. Scanning radar sweep
+                if (orb.isScanning) {
+                    orb.scanAngle += 0.08;
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(orb.scanAngle);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius * 1.38, 0, 1.1);
+                    ctx.strokeStyle = 'hsla(195, 100%, 76%, 0.75)';
+                    ctx.lineWidth = 2.5;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 2. Supabase Quota Arc (when focused on Supabase)
+                if (orb.focus === 'supabase') {
+                    const pct = Math.min(1, hub.supabase.storageGB / hub.supabase.quotaGB);
+                    const ringR = radius * 1.36;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.14)';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, ringR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
+                    ctx.strokeStyle = 'hsla(176, 95%, 64%, 0.9)';
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 3. Brevo Warning Arcs (when Brevo has active flags)
+                if (hub.brevo.flagged > 0 && (orb.focus === 'brevo' || orb.focus === 'overview')) {
+                    const arcCount = orb.focus === 'brevo' ? 4 : 2;
+                    for (let a = 0; a < arcCount; a++) {
+                        const seed = Math.floor(orb.time * 10) + a * 23;
+                        const startA = ((seed * 1.618) % 1) * Math.PI * 2;
+                        ctx.beginPath();
+                        for (let s = 0; s <= 8; s++) {
+                            const frac = s / 8;
+                            const ang = startA + frac * 0.7;
+                            const env = Math.sin(frac * Math.PI);
+                            const jitter = Math.sin(orb.time * 16 + s * 2.5 + a) * radius * 0.12 * env;
+                            const r = radius * (0.82 + env * 0.22) + jitter;
+                            const x = cx + Math.cos(ang) * r;
+                            const y = cy + Math.sin(ang) * r;
+                            if (s === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                        }
+                        ctx.strokeStyle = `hsla(38, 100%, 68%, ${orb.focus === 'brevo' ? 0.72 : 0.38})`;
+                        ctx.lineWidth = orb.focus === 'brevo' ? 1.8 : 1.2;
+                        ctx.stroke();
+                    }
+                }
+
+                // 4. Overview Orbiting System Satellites
+                if (orb.focus === 'overview') {
+                    const orbitR = radius * 1.42;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    orb.satellites.forEach((sat, idx) => {
+                        sat.angle += 0.0045;
+                        const sx = cx + Math.cos(sat.angle) * orbitR;
+                        const sy = cy + Math.sin(sat.angle) * orbitR;
+                        const isWarn = (sat.key === 'brevo' && hub.brevo.flagged > 0) ||
+                                       (sat.key === 'traffic' && hub.traffic.alert);
+                        const color = isWarn ? 'rgba(251, 191, 36, 0.95)' : 'rgba(56, 189, 248, 0.9)';
+
+                        // Subtle glow halo
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, isWarn ? 7 : 5, 0, Math.PI * 2);
+                        ctx.fillStyle = isWarn ? 'rgba(251, 191, 36, 0.22)' : 'rgba(56, 189, 248, 0.18)';
+                        ctx.fill();
+
+                        // Satellite core dot
+                        ctx.beginPath();
+                        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.fill();
+                    });
+                }
+
+                // 5. Particles: Flowing IN/OUT during Traffic focus, calm orbit otherwise
+                orb.flowParticles.forEach(pt => {
+                    if (orb.focus === 'traffic') {
+                        const flowSpeed = (hub.traffic.alert ? 0.022 : 0.011);
+                        pt.dist += pt.dir * flowSpeed;
+                        if (pt.dist < 0.85) pt.dist = 1.9;
+                        if (pt.dist > 1.95) pt.dist = 0.88;
+                    } else {
+                        pt.angle += pt.speed * orb.speed;
+                    }
+                    const px = cx + Math.cos(pt.angle) * (radius * pt.dist);
+                    const py = cy + Math.sin(pt.angle) * (radius * pt.dist);
+                    const pHue = orb.focus === 'traffic' ? (pt.dir < 0 ? 195 : 175) : hue - 8;
+                    ctx.fillStyle = `hsla(${pHue}, 100%, 78%, ${pt.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, pt.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // 6. Hold-to-Scan progress ring
+                if (orb.holdLevel > 0.03) {
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius * 1.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * orb.holdLevel);
+                    ctx.strokeStyle = 'hsla(198, 100%, 82%, 0.85)';
+                    ctx.lineWidth = 2.5;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+            }
+
+            /**
+             * Main animation loop.
+             */
+            function render() {
+                orb.frame++;
+
+                // Hold progression
+                if (orb.isHolding) orb.holdLevel = Math.min(1, orb.holdLevel + 0.022);
+                else orb.holdLevel = Math.max(0, orb.holdLevel - 0.06);
+
+                // Smooth hue & energy interpolation
+                let hueDiff = orb.targetHue - orb.hue;
+                if (hueDiff > 180) hueDiff -= 360;
+                if (hueDiff < -180) hueDiff += 360;
+                orb.hue = (orb.hue + hueDiff * 0.05 + 360) % 360;
+
+                orb.speed += (orb.targetSpeed + orb.holdLevel * 1.6 - orb.speed) * 0.06;
+                orb.turbulence += (orb.targetTurbulence + orb.holdLevel * 0.14 - orb.turbulence) * 0.06;
+                orb.scale += (orb.targetScale + orb.holdLevel * 0.08 - orb.scale) * 0.06;
+                orb.time += 0.02 * orb.speed;
+
+                ctx.clearRect(0, 0, orb.width, orb.height);
+
+                const offsetX = orb.pointerActive ? (orb.pointerX - orb.cx) * 0.05 : 0;
+                const offsetY = orb.pointerActive ? (orb.pointerY - orb.cy) * 0.05 : 0;
+                const cx = orb.cx + offsetX;
+                const cy = orb.cy + offsetY;
+                const breathe = Math.sin(orb.time * 1.5) * 0.028;
+                const radius = orb.baseRadius * (orb.scale + breathe);
+                const hue = orb.hue;
+
+                // Outer ambient glow
+                const aura = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius * 2.15);
+                aura.addColorStop(0, `hsla(${hue}, 100%, 58%, 0.34)`);
+                aura.addColorStop(0.5, `hsla(${hue + 10}, 95%, 42%, 0.12)`);
+                aura.addColorStop(1, 'hsla(210, 90%, 20%, 0)');
+                ctx.fillStyle = aura;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 2.15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Expanding shockwave pulses
+                for (let i = orb.pulses.length - 1; i >= 0; i--) {
+                    const p = orb.pulses[i];
+                    p.radius += 3.6;
+                    p.alpha *= 0.93;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, p.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `hsla(${p.hue ?? hue - 8}, 100%, 76%, ${p.alpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    if (p.alpha < 0.02 || p.radius > p.maxRadius) orb.pulses.splice(i, 1);
+                }
+
+                // Storytelling visuals (satellites, streams, quota ring, warning arcs)
+                drawStoryVisuals(cx, cy, radius, hue);
+
+                // Plasma Core & 3D Lattice
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                drawPlasmaLayer(cx, cy, radius * 1.02, 0.0, 0, hue + 8);
+                drawPlasmaLayer(cx, cy, radius * 0.90, 2.2, 1, hue);
+                drawPlasmaLayer(cx, cy, radius * 0.76, 4.1, 2, hue - 10);
+                drawLattice(cx, cy, radius, hue);
+
+                // Bright luminous center core
+                const core = ctx.createRadialGradient(cx - radius * 0.12, cy - radius * 0.14, radius * 0.03, cx, cy, radius * 0.72);
+                core.addColorStop(0, `hsla(${hue - 14}, 100%, 96%, 0.92)`);
+                core.addColorStop(0.35, `hsla(${hue - 4}, 100%, 66%, 0.62)`);
+                core.addColorStop(1, `hsla(${hue + 10}, 100%, 40%, 0)`);
+                ctx.fillStyle = core;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Clean glass rim highlight
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 0.95, Math.PI * 1.1, Math.PI * 1.62);
+                ctx.strokeStyle = `hsla(${hue - 16}, 100%, 92%, 0.4)`;
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                ctx.restore();
+
+                requestAnimationFrame(render);
+            }
+
+            /**
+             * Event Listeners
+             */
+            function bindEvents() {
+                window.addEventListener('resize', resizeCanvas);
+
+                stage.addEventListener('pointermove', (e) => {
+                    const rect = stage.getBoundingClientRect();
+                    orb.pointerX = e.clientX - rect.left;
+                    orb.pointerY = e.clientY - rect.top;
+                    orb.pointerActive = true;
+                });
+
+                stage.addEventListener('pointerdown', () => {
+                    orb.isHolding = true;
+                    if (orbHint) orbHint.classList.add('opacity-0');
+                });
+
+                const endHold = () => {
+                    if (!orb.isHolding) return;
+                    orb.isHolding = false;
+                    runSecuritySweep();
+                };
+
+                stage.addEventListener('pointerup', endHold);
+                stage.addEventListener('pointercancel', endHold);
+                stage.addEventListener('pointerleave', () => {
+                    orb.pointerActive = false;
+                    if (orb.isHolding) endHold();
+                });
+
+                focusButtons.forEach(btn => {
+                    btn.addEventListener('click', () => setFocus(btn.dataset.focus));
+                });
+
+                logToggleBtn.addEventListener('click', () => {
+                    activityDrawer.classList.toggle('hidden');
+                });
+
+                simAlertBtn.addEventListener('click', simulateAlert);
+                clearFlagsBtn.addEventListener('click', clearAllFlags);
+
+                soundBtn.addEventListener('click', () => {
+                    orb.soundEnabled = !orb.soundEnabled;
+                    iconSoundOff.classList.toggle('hidden', orb.soundEnabled);
+                    iconSoundOn.classList.toggle('hidden', !orb.soundEnabled);
+                    if (orb.soundEnabled) {
+                        playTone(520, 0.2);
+                        showToast('Audio Enabled');
+                    } else {
+                        showToast('Audio Muted');
+                    }
+                });
+
+                commandForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const text = commandInput.value.trim();
+                    if (!text) return;
+                    commandInput.value = '';
+                    handleQuery(text);
+                });
+            }
+
+            window.onload = function () {
+                resizeCanvas();
+                initVisualGeometry();
+                syncOrbVisualStory();
+                renderStoryAndStrip();
+                renderLogList();
+                bindEvents();
+                render();
+                if (token) refresh(); else showLogin();
+                setInterval(() => { if (token && !document.hidden) refresh(); }, 300000);
+            };
+        })();
+    </script>
+</body>
+</html>
